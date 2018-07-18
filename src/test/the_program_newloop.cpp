@@ -15,8 +15,8 @@
 TEST(the_program_new_loop, use_options_peerref) {
 	g_dbg_level_set(200, "Be quiet in test (no fact output)");
 
-	string argt_exe = "my_exec_name";
-	vector<string> argt {"--peer", "192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
+	std::string argt_exe = "my_exec_name";
+	std::vector<std::string> argt {"--peer", "192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
 						 "--peer", "auto:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
 						 "--peer", "udp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",
 						 "--peer", "tcp:192.166.218.58:19042-fd42:f6c4:9d19:f128:30df:b289:aef0:25f5",

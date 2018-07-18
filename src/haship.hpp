@@ -58,20 +58,20 @@ struct c_haship_addr : public std::array<unsigned char, g_haship_addr_size> {
 	/// create the IP address from std::array of unsigned char
 	c_haship_addr(tag_constr_by_array_uchar x, const std::array<unsigned char, g_haship_addr_size> & data);
 
-	void print(ostream &ostr) const;
+	void print(std::ostream &ostr) const;
 	std::string get_hip_as_string(bool with_dots) const;
 	bool is_empty() const;
 	static c_haship_addr make_empty(); ///< named constructor
 };
-ostream& operator<<(ostream &ostr, const c_haship_addr & v);
+std::ostream& operator<<(std::ostream &ostr, const c_haship_addr & v);
 
 struct c_haship_pubkey : antinet_crypto::c_multikeys_pub {
 	c_haship_pubkey();
 	c_haship_pubkey( const string_as_bin & input ); ///< create the IP from a string with serialization of the key
 
-	void print(ostream &ostr) const;
+	void print(std::ostream &ostr) const;
 };
-ostream& operator<<(ostream &ostr, const c_haship_pubkey & v);
+std::ostream& operator<<(std::ostream &ostr, const c_haship_pubkey & v);
 
 
 namespace unittest {

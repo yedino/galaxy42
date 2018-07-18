@@ -5,7 +5,6 @@
 
 #ifdef __linux__
 
-#include "libs1.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <ostream>
@@ -51,7 +50,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 		 * Exception safety: strong exception guarantee
 		 */
 		static bool is_ipv4(const std::string &ipstr);
-		friend ostream & operator<<(ostream &out, const c_ip46_addr& addr);
+		friend std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr);
 
 		/**
 		 * @return false if m_tag of lhs and rhs are different

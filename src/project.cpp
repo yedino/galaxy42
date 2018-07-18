@@ -1,8 +1,8 @@
 
 #include "project.hpp"
+#include <mo_reader.hpp>
 
-
-#include "libs0.hpp"
+using namespace std;
 
 invalid_argument_in_version::invalid_argument_in_version( const std::string& what_arg )
 : invalid_argument(std::string("This argument is not supported in this version of program; ") + what_arg)

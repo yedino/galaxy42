@@ -1,4 +1,9 @@
 #include "fake_tuntap.hpp"
+#include <cstring>
+#include <tnetdbg.hpp>
+#include <utils/check.hpp>
+
+using namespace std;
 
 c_tuntap_fake_kernel::c_tuntap_fake_kernel()
 	: m_readtun_nr(0)

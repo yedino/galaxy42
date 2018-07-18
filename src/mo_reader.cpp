@@ -3,7 +3,7 @@
 #include "mo_reader.hpp"
 #include <cstring>
 
-#include "libs0.hpp" // for debug
+#include <tnetdbg.hpp>
 
 std::atomic<bool> mo_file_reader::s_translation_map_ready(false);
 std::map<std::string, std::string> mo_file_reader::m_translation_map;

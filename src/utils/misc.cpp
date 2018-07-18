@@ -1,6 +1,8 @@
 
 #include "utils/misc.hpp"
 
+using namespace std;
+
 c_string_string_Cstyle::c_string_string_Cstyle(const vector<string> & data) {
 	init_from_data(nullptr, data);
 }

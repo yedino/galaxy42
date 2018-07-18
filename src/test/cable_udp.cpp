@@ -3,7 +3,9 @@
 #include "../cable/udp/cable_udp_obj.hpp"
 #include "mock_c_card_selector.hpp"
 #include "mock_c_asioservice_manager.hpp"
+#include <utils/unused.hpp>
 
+using namespace std;
 
 using testing::_;
 using testing::An;

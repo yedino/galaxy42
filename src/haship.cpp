@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 #include <sodium.h>
 
+using namespace std;
 
 // c_haship_addr :
 c_haship_addr::c_haship_addr()

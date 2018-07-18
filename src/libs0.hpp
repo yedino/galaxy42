@@ -20,7 +20,7 @@ moved into e.g. src/utils/... and src/stdplus/... and this file will be purely i
 
 #include "project.hpp"
 
-#include <memory>
+/*#include <memory>
 #include <string>
 #include <vector>
 #include <list>
@@ -94,7 +94,7 @@ using namespace std::string_literals; // <=== using entire namespace
 
 
 using namespace stdplus;
-
+*/
 #define SVAR(x) #x << " = " << x
 
 

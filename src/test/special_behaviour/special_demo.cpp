@@ -4,8 +4,9 @@
  */
 
 #include "special_demo.hpp"
+#include <tnetdbg.hpp>
 
-#include "libs0.hpp"
+using namespace std;
 
 namespace n_special_behaviour {
 

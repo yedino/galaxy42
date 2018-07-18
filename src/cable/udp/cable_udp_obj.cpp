@@ -1,11 +1,12 @@
 #include "cable_udp_obj.hpp"
 #include "cable_udp_addr.hpp"
 #include "../asio_ioservice_manager.hpp"
-#include <libs0.hpp>
+#include <utils/unused.hpp>
 
 #define ANTINET_socket_use_two_and_reuse
 
 using namespace boost::asio::ip;
+using namespace std;
 
 c_cable_udp::c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr)
 :

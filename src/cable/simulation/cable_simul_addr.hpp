@@ -9,9 +9,9 @@ class c_cable_simul_addr : public c_cable_base_addr {
 		using t_addr = int; ///< actuall type of my raw address. Instace of this will be in m_addrdata (::any)
 
 		c_cable_simul_addr(t_addr uuid);
-		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
+		virtual std::unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
 
-		virtual void print(ostream & ostr) const override;
+		virtual void print(std::ostream & ostr) const override;
 
 		inline t_addr get_addr() const;
 

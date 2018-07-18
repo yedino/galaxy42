@@ -10,7 +10,8 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_int/limits.hpp>
 
-#include "libs0.hpp"
+#include <stdplus/fixcpp14.hpp>
+#include <tnetdbg.hpp>
 
 /**
  * @file This file/module goal is mainly to provide a very safe interger type
@@ -80,8 +81,8 @@ using t_int_representing_float =
 template<typename P, typename Q>
 using t_bigger_of_two_cpp_int =	boost::multiprecision::number<
 		boost::multiprecision::cpp_int_backend<
-			constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
-			constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
+			stdplus::constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
+			stdplus::constexpr_max( std::numeric_limits<P>::digits, std::numeric_limits<Q>::digits ),
 			boost::multiprecision::unsigned_magnitude, boost::multiprecision::checked, void> > ;
 
 

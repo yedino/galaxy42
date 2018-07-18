@@ -69,6 +69,8 @@
 #include <utils/privileges.hpp>
 #include "test/special_behaviour/special_demo.hpp" ///< demo functions for tsan, ubsan
 
+using namespace std;
+
 // -------------------------------------------------------------------
 
 class c_the_program_newloop_pimpl {

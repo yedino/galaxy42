@@ -27,13 +27,13 @@ class exception_error_exit {
  * from top-level function of program that is not in any catch(...) because it uses exception_error_exit
  * to quit program
  */
-void action_error_exit(const string &info);
+void action_error_exit(const std::string &info);
 
-void action_info_ok(const string &info); ///< Inform user about some progress
+void action_info_ok(const std::string &info); ///< Inform user about some progress
 
 
-void show_error_exception(const string &during_action, const std::exception &e); ///< Inform user about caught exception
-void show_error_exception_unknown(const string &during_action); ///< Inform user about caught exception of unknown type
+void show_error_exception(const std::string &during_action, const std::exception &e); ///< Inform user about caught exception
+void show_error_exception_unknown(const std::string &during_action); ///< Inform user about caught exception of unknown type
 
 #define UI_TRY try
 

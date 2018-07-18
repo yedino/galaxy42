@@ -1,5 +1,5 @@
 #include "wrap_thread.hpp"
-#include "libs0.hpp"
+#include <tnetdbg.hpp>
 
 
 wrap_thread::wrap_thread() noexcept

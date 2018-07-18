@@ -2,7 +2,7 @@
 #include <iostream>
 #include <exception>
 
-#include <libs0.hpp> // for debug etc
+#include <thread>
 #include <stdplus/vector_mutexed_obj.hpp>
 #include <stdplus/with_mutex.hpp>
 

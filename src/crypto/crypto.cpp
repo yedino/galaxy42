@@ -63,6 +63,9 @@ using sodiumpp::locked_string;
  */
 
 
+using namespace std;
+using namespace stdplus;
+
 namespace antinet_crypto {
 
 

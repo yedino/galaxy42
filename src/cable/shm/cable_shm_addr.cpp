@@ -1,4 +1,7 @@
 #include "cable_shm_addr.hpp"
+#include <tnetdbg.hpp>
+
+using namespace std;
 
 cable_shm_addr::cable_shm_addr()
 : c_cable_base_addr( t_cable_kind::kind_shm )

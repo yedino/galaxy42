@@ -7,6 +7,9 @@
 #include <cmath>
 #include <type_traits>
 #include <limits>
+#include <utils/unused.hpp>
+
+using namespace std;
 
 #if USE_BOOST_MULTIPRECISION
 
@@ -83,7 +86,7 @@ TEST(xint, narrowing_func_call_int_PROBLEM) {
 struct special_64u {
 	public:
 		special_64u(uint64_t val) : m_val(val) { }
-		template <typename T> operator T () { return numeric_cast<T>(m_val); }
+		template <typename T> operator T () { return boost::numeric_cast<T>(m_val); }
 		private: uint64_t m_val;
 };
 /// Narrowing of int - solution using our tiny local type to demonstrate how it works
@@ -661,9 +664,9 @@ void someint(long long int x) {
 }
 
 template <typename T>
-xintu make_xintu(T value) {	return numeric_cast<uint64_t>(value); }
+xintu make_xintu(T value) {	return boost::numeric_cast<uint64_t>(value); }
 template <typename T>
-xintu make_xint(T value) {	return numeric_cast<int64_t>(value); }
+xintu make_xint(T value) {	return boost::numeric_cast<int64_t>(value); }
 
 
 TEST(xint, range_b_to_sizet) {

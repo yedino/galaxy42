@@ -3,11 +3,13 @@
 #ifndef include_strings_utils_hpp
 #define include_strings_utils_hpp
 
-#include "libs0.hpp"
 
+#include <array>
 #include <boost/any.hpp>
-
+#include <iomanip>
+#include <map>
 #include <strings_utils_base.hpp>
+#include <vector>
 
 // -------------------------------------------------------------------
 

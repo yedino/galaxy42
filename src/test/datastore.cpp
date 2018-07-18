@@ -5,6 +5,10 @@
 
 #include <sodium.h>
 #include <sodiumpp/sodiumpp.h>
+#include <tnetdbg.hpp>
+#include <stdplus/misc.hpp>
+
+using namespace stdplus;
 
 TEST(datastore, custom_string_save) {
 

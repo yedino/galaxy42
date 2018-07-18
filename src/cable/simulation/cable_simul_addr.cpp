@@ -1,5 +1,7 @@
 #include "cable/simulation/cable_simul_addr.hpp"
+#include <tnetdbg.hpp>
 
+using namespace std;
 
 c_cable_simul_addr::c_cable_simul_addr(int uuid) : c_cable_base_addr(t_cable_kind::kind_simul),
 m_addr(uuid)

@@ -20,7 +20,7 @@ class c_the_program_tunserver : public c_the_program {
 		virtual int main_execution() override; ///< enter the main execution of program - usually containing the main loop; Return the exit-code of it.
 
 	protected:
-		unique_ptr<c_tunserver> m_myserver_ptr; ///< object of my node
+		std::unique_ptr<c_tunserver> m_myserver_ptr; ///< object of my node
 
 		int m_http_dbg_port=9080; ///< the http-debug port
 

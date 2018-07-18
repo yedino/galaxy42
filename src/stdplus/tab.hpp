@@ -11,7 +11,7 @@ stdplus/tab focuses on containers support
 
 #include <memory>
 #include <utils/check.hpp>
-#include <utils/misc.hpp>
+#include <stdplus/misc.hpp>
 
 namespace stdplus {
 

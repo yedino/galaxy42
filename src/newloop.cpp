@@ -1,10 +1,12 @@
-#include "libs1.hpp"
 #include "utils/check.hpp"
 #include "utils/misc.hpp"
 #include "netbuf.hpp"
+#include <utils/unused.hpp>
 
 /// @file - is probably deprecated TODO remove me later
 /// @owner rfree
+
+using namespace std;
 
 typedef string cable_id; // name next hop
 typedef string hip_id; // name end src/dst

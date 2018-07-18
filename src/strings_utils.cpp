@@ -1,10 +1,10 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "strings_utils.hpp"
-
 #include "crypto/crypto_basic.hpp" // for hashing function
+#include <utils/unused.hpp>
 
-#include "libs0.hpp"
+using namespace std;
 
 // ==================================================================
 

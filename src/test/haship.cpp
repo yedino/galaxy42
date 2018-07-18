@@ -3,7 +3,9 @@
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
 #include "../haship.hpp"
+#include <utils/unused.hpp>
 
+using namespace std;
 
 TEST(haship, creation_zero) {
 	c_haship_addr x,y;

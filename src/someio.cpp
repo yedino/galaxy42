@@ -1,6 +1,7 @@
 #include "platform.hpp"
 
 #include "someio.hpp"
+#include <tnetdbg.hpp>
 
 c_someio::c_someio()
 : m_stop(false)

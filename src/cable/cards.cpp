@@ -10,7 +10,7 @@
 #include "udp/cable_udp_addr.hpp"
 
 
-unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector & selector) {
+std::unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector & selector) {
 	pfp_note("Creating cablecard, selector="<<selector);
 	switch (selector.get_kind()) {
 		/*
@@ -23,7 +23,7 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector 
 		*/
 		case t_cable_kind::kind_udp:
 		{
-			return make_unique<c_cable_udp>(get_asioservice(), selector );
+			return std::make_unique<c_cable_udp>(get_asioservice(), selector );
 		}
 		break;
 		default:
@@ -32,10 +32,10 @@ unique_ptr< c_cable_base_obj > c_cable_cards::create_card(const c_card_selector 
 	pfp_throw_error_runtime("unsupported cable kind");
 }
 
-shared_ptr<c_asioservice_manager_base> &c_cable_cards::get_asioservice() {
+std::shared_ptr<c_asioservice_manager_base> &c_cable_cards::get_asioservice() {
 	if (m_asioservice_manager == nullptr) {
 		pfp_note("Need to allocate asioservice manager");
-		m_asioservice_manager = make_shared< c_asioservice_manager >( 1 ); // TODO option - ioservices
+		m_asioservice_manager = std::make_shared< c_asioservice_manager >( 1 ); // TODO option - ioservices
 	} else pfp_dbg1("Returning existing get_asioservice");
 	_check( m_asioservice_manager );
 	return m_asioservice_manager;
@@ -46,7 +46,7 @@ c_cable_base_obj & c_cable_cards::get_card(const c_card_selector & selector) {
 	auto found = m_cards.find(selector);
 	if (found == m_cards.end()) {
 		pfp_note("Create card for cable kind=" << static_cast<int>(selector.get_kind()) << ", selector=" << selector);
-		unique_ptr<c_cable_base_obj> card = c_cable_cards::create_card(selector);
+		std::unique_ptr<c_cable_base_obj> card = c_cable_cards::create_card(selector);
 		pfp_note("Created card at " << static_cast<void*>(card.get()));
 		m_cards.emplace( selector , std::move(card) );
 		pfp_dbg1("Emplaced, size: " << m_cards.size());

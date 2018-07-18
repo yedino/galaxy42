@@ -12,7 +12,7 @@ class cable_shm_addr final : public c_cable_base_addr {
 
 		virtual void print(std::ostream & ostr) const override; ///< displays human readable form of this address
 
-		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
+		virtual std::unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
 
 	private:
 		t_addr m_addr; ///< actuall address

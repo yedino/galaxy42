@@ -61,7 +61,7 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
-		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk)
+		void program_action_set_IDI(const std::string & keyname); ///< set configured IDI key (write the config to disk)
 		void program_action_gen_key(const boost::program_options::variables_map & argm); ///< generate a key according to given options
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI"
 		/// @}

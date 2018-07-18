@@ -9,6 +9,8 @@
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"
+#include <vector>
+#include <string>
 
 #if ENABLE_CRYPTO_NTRU
 	#ifdef __MACH__
@@ -44,14 +46,14 @@ class c_multicryptostrings : public c_crypto_system {
 
 		typedef c_multicryptostrings<TKey> t_self; ///< My own type (concretized ofcourse). Useful for shorter coding style.
 
-		typedef std::array< vector< TKey > , e_crypto_system_type_END	> t_cryptolists_general; ///< templated!
+		typedef std::array< std::vector< TKey > , e_crypto_system_type_END	> t_cryptolists_general; ///< templated!
 		typedef TKey t_key; ///< concretized key type used in this templated class
 
 		///< A "map" of e.g. public keys of given type, organized by their crypto type.
 		///< example use: to get 50-th of our Ed25519 keys: m_cryptolists_pubkey[ e_crypto_system_type_Ed25519 ].at(50);
 		t_cryptolists_general m_cryptolists_general; ///<  *** The main collection ("map") of the keys
 
-		mutable string m_hash_cached; ///< Hash of all my e.g. public keys (a cache,
+		mutable std::string m_hash_cached; ///< Hash of all my e.g. public keys (a cache,
 		// auto calculated by getters/cleared by setters - when m_autoupdate_hash)
 		// empty "" means that it needs calculation. (this is the default value)
 
@@ -76,7 +78,7 @@ class c_multicryptostrings : public c_crypto_system {
 		/// @name Getters: @{
 		size_t get_count_keys_in_system(t_crypto_system_type crypto_type) const; ///< how many keys of given type
 		size_t get_count_of_systems() const; ///< how many key types?
-		string get_hash() const; ///< const, though it is allowed to update mutable field with cache of current hash
+		std::string get_hash() const; ///< const, though it is allowed to update mutable field with cache of current hash
 		/// @}
 
 		/// @name save/load: @{
@@ -91,8 +93,8 @@ class c_multicryptostrings : public c_crypto_system {
 		*/
 		virtual void load_from_bin(const std::string & data);
 
-		void datastore_save(const string  & fname, bool overwrite = false) const; ///< Save this data to a file.
-		void datastore_load(const string  & fname); ///< Replace all current data with data datastore_loaded from this file.
+		void datastore_save(const std::string  & fname, bool overwrite = false) const; ///< Save this data to a file.
+		void datastore_load(const std::string  & fname); ///< Replace all current data with data datastore_loaded from this file.
 		void clear(); ///< Delete all current data.
 		/// @}
 
@@ -156,9 +158,9 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		c_multikeys_pub();
 		virtual t_crypto_system_type get_system_type() const;
 
-		string get_ipv6_string_bin() const; ///< IPV6 from hash of this key - as binary data string
-		string get_ipv6_string_hex() const; ///< IPV6 from hash of this key - as hex values string
-		string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
+		std::string get_ipv6_string_bin() const; ///< IPV6 from hash of this key - as binary data string
+		std::string get_ipv6_string_hex() const; ///< IPV6 from hash of this key - as hex values string
+		std::string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
 
 		/// @name Modifiers - concretized version. \n Ready to use. @{
 		void add_public(t_crypto_system_type crypto_type, const t_key & key); ///< append one more key
@@ -178,8 +180,8 @@ class c_multikeys_pub : public c_multikeys_general<c_crypto_system::t_pubkey> {
 		 * 		  Public keys must coresponding to PRV keys that was used to sign message
 		 * @param sign_type	Type of crypto system.
 		 */
-		static void multi_sign_verify(const std::vector<string> &signs,
-									  const string &msg,
+		static void multi_sign_verify(const std::vector<std::string> &signs,
+									  const std::string &msg,
 									  const c_multikeys_pub &pubkeys,
 									  t_crypto_system_type sign_type);
 
@@ -240,11 +242,11 @@ class c_multikeys_PAIR {
 	public:
 		virtual ~c_multikeys_PAIR() = default;
 
-		string get_ipv6_string_bin() const; ///< IPV6 from hash of this key (binary data)
-		string get_ipv6_string_hex() const; ///< IPV6 from hash of this key (hex string)
-		string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
+		std::string get_ipv6_string_bin() const; ///< IPV6 from hash of this key (binary data)
+		std::string get_ipv6_string_hex() const; ///< IPV6 from hash of this key (hex string)
+		std::string get_ipv6_string_hexdot() const; ///< IPV6 from hash of this key in ipv6 format hex + dots
 
-		string get_serialize_bin_pubkey() const; ///< get the serialized pubkey of this, e.g. to send it to others
+		std::string get_serialize_bin_pubkey() const; ///< get the serialized pubkey of this, e.g. to send it to others
 
 		///< generate from list of how many keys of given type we need
 		void generate(t_crypto_system_count cryptolists_count, bool will_asymkex);
@@ -278,8 +280,8 @@ class c_multikeys_PAIR {
 		 * 		  Public keys must coresponding to PRV keys that was used to sign message
 		 * @param sign_type	Type of crypto system.
 		 */
-		void multi_sign_verify(const std::vector<string> &signs,
-									  const string &msg,
+		void multi_sign_verify(const std::vector<std::string> &signs,
+									  const std::string &msg,
 									  t_crypto_system_type sign_type);
 
 		void multi_sign_verify(const c_multisign &all_signatures,
@@ -293,11 +295,11 @@ class c_multikeys_PAIR {
 			const c_crypto_system::t_PRVkey & PRVkey);
 
 		/// like c_multikeys_general<>::datastore_save(), for the private (+public) key
-		void datastore_save_PRV_and_pub(const string  & fname_base) const;
+		void datastore_save_PRV_and_pub(const std::string  & fname_base) const;
 		/// like c_multikeys_general<>::datastore_save(), for the public key
-		void datastore_save_pub(const string  & fname_base) const;
+		void datastore_save_pub(const std::string  & fname_base) const;
 		/// like c_multikeys_general<>::datastore_load(), for the private (+public) key
-		void datastore_load_PRV_and_pub(const string  & fname_base);
+		void datastore_load_PRV_and_pub(const std::string  & fname_base);
 
 		virtual t_crypto_system_type get_system_type() const;
 

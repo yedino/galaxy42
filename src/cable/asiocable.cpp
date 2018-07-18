@@ -1,8 +1,7 @@
 
 #include "asiocable.hpp"
-#include "libs1.hpp"
 
-c_asiocable::c_asiocable(shared_ptr<c_asioservice_manager_base> &iomanager)
+c_asiocable::c_asiocable(std::shared_ptr<c_asioservice_manager_base> &iomanager)
 	:
 	m_ptr_checker(iomanager), // check if iomanager != nullptr
 	m_io_service( iomanager -> get_next_ioservice() ),

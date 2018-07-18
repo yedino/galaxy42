@@ -11,6 +11,8 @@
 #include <stdplus/tab.hpp>
 #include <stdplus/misc.hpp>
 
+using namespace stdplus;
+
 TEST(stdplus_tab, helper_overlap) {
 
 	std::vector<int> aaa{100, 101, 102, 103, 104};

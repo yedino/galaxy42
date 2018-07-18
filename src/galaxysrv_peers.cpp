@@ -1,9 +1,11 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "galaxysrv_peers.hpp"
-#include "libs1.hpp"
+#include <strings_utils_simple.hpp>
 
-void t_peer_reference_newloop::print(ostream &ostr) const{
+using namespace std;
+
+void t_peer_reference_newloop::print(std::ostream &ostr) const{
 	ostr << hip << ", cables:[";
 	for(const unique_ptr<c_cable_base_addr>& addr : cable_addr)
 		ostr << UsePtr(addr) << ", ";

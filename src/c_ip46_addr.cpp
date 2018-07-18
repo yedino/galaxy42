@@ -1,7 +1,8 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "c_ip46_addr.hpp"
-#include <libs0.hpp>
+#include <strings_utils_simple.hpp>
+#include <tnetdbg.hpp>
 
 
 // ==================================================================
@@ -12,6 +13,7 @@
 
 #include "cpputils.hpp"
 #include <netdb.h>
+#include <tnetdbg.hpp>
 
 c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
 
@@ -65,7 +67,7 @@ c_ip46_addr c_ip46_addr::any_on_port(int port) {
 	return ret;
 }
 
-c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
+c_ip46_addr c_ip46_addr::create_ipv4(const std::string &ipv4_str, int port) {
 	as_zerofill< sockaddr_in > addr_in;
 	addr_in.sin_family = AF_INET;
 	inet_pton(AF_INET, ipv4_str.c_str(), &(addr_in.sin_addr));
@@ -75,7 +77,7 @@ c_ip46_addr c_ip46_addr::create_ipv4(const string &ipv4_str, int port) {
 	return ret;
 }
 
-c_ip46_addr c_ip46_addr::create_ipv6(const string &ipv6_str, int port) {
+c_ip46_addr c_ip46_addr::create_ipv6(const std::string &ipv6_str, int port) {
 	as_zerofill <sockaddr_in6> addr_in6;
 	addr_in6.sin6_family = AF_INET6;
 	inet_pton(AF_INET6, ipv6_str.c_str(), &(addr_in6.sin6_addr));
@@ -97,16 +99,16 @@ int c_ip46_addr::get_assigned_port() const {
 }
 
 
-bool c_ip46_addr::is_ipv4(const string &ipstr) {
+bool c_ip46_addr::is_ipv4(const std::string &ipstr) {
 	as_zerofill< addrinfo > hint;
 	struct addrinfo *result = nullptr;
 	hint.ai_family = PF_UNSPEC;
 	hint.ai_flags = AI_NUMERICHOST;
 
 	int ret = getaddrinfo(ipstr.c_str(), nullptr, &hint, &result);
-	if (ret) pfp_throw_error( invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
-	if (!result) pfp_throw_error( invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
-	auto result_deleter = [&](struct addrinfo *result){ if (!result) pfp_throw_error(runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
+	if (ret) pfp_throw_error( std::invalid_argument( join_string_sep("unknown address format, ret",ret,"for ipstr",ipstr)));
+	if (!result) pfp_throw_error( std::invalid_argument( join_string_sep("unknown address format, pointer result",result,"for ipstr",ipstr)));
+	auto result_deleter = [&](struct addrinfo *result){ if (!result) pfp_throw_error(std::runtime_error("NULL in freeaddrinfo")); freeaddrinfo(result); };
 	std::unique_ptr<struct addrinfo, decltype(result_deleter)> result_ptr(result, result_deleter);
 
 	if(result_ptr->ai_family == AF_INET) {
@@ -119,7 +121,7 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 }
 
 
-ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
+std::ostream & operator<<(std::ostream &out, const c_ip46_addr& addr) {
 	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
 		char addr_str[INET_ADDRSTRLEN];
 		auto ip4_address = addr.get_ip4();

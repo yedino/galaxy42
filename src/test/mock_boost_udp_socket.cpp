@@ -1,4 +1,5 @@
 #include "mock_boost_udp_socket.hpp"
+#include <utils/unused.hpp>
 
 using namespace mock;
 

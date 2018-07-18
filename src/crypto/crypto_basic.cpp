@@ -3,6 +3,7 @@
 
 #include "crypto_basic.hpp"
 
+using namespace std;
 
 namespace antinet_crypto {
 

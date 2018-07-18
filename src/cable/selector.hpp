@@ -4,7 +4,7 @@
 #include <cable/base/cable_base_addr.hpp>
 #include <cable/base/cable_base_obj.hpp>
 #include <cable/kind.hpp>
-#include <libs0.hpp>
+#include <utils/check.hpp>
 
 /**
  * @brief The c_card_selector_base class needed for create mock
@@ -12,7 +12,7 @@
 class c_card_selector_base {
 	public:
 		virtual ~c_card_selector_base() = default;
-		virtual void print(ostream & out) const = 0;
+		virtual void print(std::ostream & out) const = 0;
 		virtual t_cable_kind get_kind() const = 0;
 		virtual c_cable_base_addr & get_my_addr() = 0;
 		virtual const c_cable_base_addr & get_my_addr() const = 0;
@@ -41,7 +41,7 @@ class c_card_selector_base {
 class c_card_selector final : public c_card_selector_base {
 	public:
 		c_card_selector()=default;
-		c_card_selector(unique_ptr<c_cable_base_addr> && my_addr);
+		c_card_selector(std::unique_ptr<c_cable_base_addr> && my_addr);
 
 		c_card_selector(const c_card_selector & other);
 		c_card_selector & operator=(const c_card_selector & other);
@@ -52,17 +52,17 @@ class c_card_selector final : public c_card_selector_base {
 		bool operator<(const c_card_selector & other) const;
 		/// @}
 
-		void print(ostream & out) const override;
+		void print(std::ostream & out) const override;
 
 		inline t_cable_kind get_kind() const override;
 		inline c_cable_base_addr & get_my_addr() override;
 		inline const c_cable_base_addr & get_my_addr() const override;
 
 	private:
-		unique_ptr<c_cable_base_addr> m_my_addr; ///< polymorphic to have any address type
+		std::unique_ptr<c_cable_base_addr> m_my_addr; ///< polymorphic to have any address type
 };
 
-ostream & operator<<(ostream & out, const c_card_selector & obj);
+std::ostream & operator<<(std::ostream & out, const c_card_selector & obj);
 
 t_cable_kind c_card_selector::get_kind() const { return UsePtr(m_my_addr).get_kind(); }
 c_cable_base_addr & c_card_selector::get_my_addr() { return UsePtr(m_my_addr); }

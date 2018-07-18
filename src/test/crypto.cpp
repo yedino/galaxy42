@@ -439,9 +439,9 @@ void unittest_create_cryptolink(const int number_of_test, int level, int packet_
 
 		c_crypto_tunnel AliceCT(keypairA, keypubB, "Alice");
 		AliceCT.create_IDe();
-		string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
+		std::string packetstart_1 = AliceCT.get_packetstart_ab(); // A--->>>
 		c_crypto_tunnel BobCT(keypairB, keypubA, packetstart_1, "Bobby");
-		string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
+		std::string packetstart_2 = BobCT.get_packetstart_final(); // B--->>>
 		AliceCT.create_CTf(packetstart_2); // A<<<---
 
 		const std::string msg1(1024, 'a');

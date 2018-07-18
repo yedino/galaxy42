@@ -1,6 +1,6 @@
 #include "netbuf.hpp"
 #include "tnetdbg.hpp"
-
+#include <stdplus/eint.hpp>
 
 c_netchunk::c_netchunk(c_netchunk && rhs) noexcept
 : m_data(rhs.m_data), m_size(rhs.m_size) {
@@ -114,7 +114,7 @@ stdplus::tab_view<unsigned char> c_netbuf::to_tab_view() const {
 }
 
 c_netchunk c_netbuf::get_chunk(size_t offset, size_t size) {
-	_check_abort( eint::eint_plus( offset , size ) <= m_size );
+	_check_abort( stdplus::eint::eint_plus( offset , size ) <= m_size );
 	return c_netchunk(m_data + offset , size);
 }
 
