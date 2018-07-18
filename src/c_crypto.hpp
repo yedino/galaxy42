@@ -1,7 +1,7 @@
 #ifndef C_CRYPTO_HPP
 #define C_CRYPTO_HPP
 #include <sodium.h>
-#include "libs0.hpp"
+#include <array>
 
 /// @file this is a TEST-ONLY class for now (main program uses other code)
 /// This is based on draft from <hbadger>

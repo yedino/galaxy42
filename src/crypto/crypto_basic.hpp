@@ -35,7 +35,7 @@ it has bugs and 'typpos'.
 #ifndef include_crypto_basic_hpp
 #define include_crypto_basic_hpp
 
-#include "../libs1.hpp"
+#include <cassert>
 #include <sodium.h>
 #include "../strings_utils.hpp"
 #include "gtest/gtest_prod.h"

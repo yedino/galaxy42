@@ -3,6 +3,7 @@
 #include "c_ip46_addr.hpp"
 #include <strings_utils_simple.hpp>
 #include <tnetdbg.hpp>
+#include <memory>
 
 
 // ==================================================================

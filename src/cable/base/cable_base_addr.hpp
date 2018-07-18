@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cable/kind.hpp>
+#include <memory>
 
 int get_default_galaxy_port();
 

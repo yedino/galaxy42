@@ -1,5 +1,6 @@
 
 #include "utils/misc.hpp"
+#include <string.h> // strdup
 
 using namespace std;
 

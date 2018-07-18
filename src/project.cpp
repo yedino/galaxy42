@@ -1,6 +1,7 @@
 
 #include "project.hpp"
 #include <mo_reader.hpp>
+#include <sstream>
 
 using namespace std;
 

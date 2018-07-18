@@ -3,6 +3,7 @@
 #include "strings_utils.hpp"
 #include "crypto/crypto_basic.hpp" // for hashing function
 #include <utils/unused.hpp>
+#include <cassert>
 
 using namespace std;
 

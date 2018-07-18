@@ -5,6 +5,8 @@
 
 #include "special_demo.hpp"
 #include <tnetdbg.hpp>
+#include <vector>
+#include <thread>
 
 using namespace std;
 

@@ -3,7 +3,7 @@
 
 #include "galaxy_debug.hpp"
 
-#include "libs0.hpp"
+#include <tnetdbg.hpp>
 #include "strings_utils.hpp"
 
 // #include "glue_lockedstring_trivialserialize.hpp
