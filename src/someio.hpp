@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <boost/asio.hpp>
 #include <chrono>
 
