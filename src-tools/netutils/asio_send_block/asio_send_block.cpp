@@ -175,12 +175,12 @@ class c_maintask {
 		std::chrono::steady_clock::time_point time_print_next;
 
 		double target_speed_Mbit_sec;
-		double target_speed;
+		double target_speed_MByte_microsec;
 
 		// conf:
 		const char *host;
 		const char *port;
-		mysize_t speed;
+		mysize_t speed; ///< Mbps
 		std::string message;
 		bool interactive;
 		mysize_t bytes, count, request_length;
@@ -206,23 +206,23 @@ void c_maintask::print_help_sendcommand() const {
 
 void c_maintask::print_usage_rpc_cmd() const {
 	std::cout << "secret1 SEND [args for normal run]  <--- this text, ending with a NEW LINE.\n";
-	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 1472  -1  \n";
-	std::cout << "secret1 SEND 127.0.0.1 9000  999000 foo 8972  -1 5 -1 (no time limit, 5 seconds, no GB limit) \n";
+	std::cout << "secret1 SEND 127.0.0.1 5555  250000 foo 1472  -1  \n";
+	std::cout << "secret1 SEND 127.0.0.1 5555  250000 foo 8972  -1 5 -1 (no time limit, 5 seconds, no GB limit) \n";
 }
 
 void c_maintask::print_usage() const {
 		std::cout << std::endl;
-		std::cout << "Usage: ./client <host> <port> <max_speed> SendCommand" << std::endl;
-		std::cout << "e.g.:  ./client <host> <port> <max_speed> <msg> <msgbytes> <count> [maxTime sec] [maxData GB]" << std::endl;
-		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 " << std::endl;
-		std::cout << "e.g.:  ./client 127.0.0.1 9000  999000    foo   1500       -1 10 -1 " << std::endl;
+		std::cout << "Usage: ./client <host> <port> <max_speed Mbps> SendCommand" << std::endl;
+		std::cout << "e.g.:  ./client <host> <port> <max_speed Mbps> <msg> <msgbytes> <count> [maxTime sec] [maxData GiB]" << std::endl;
+		std::cout << "e.g.:  ./client 127.0.0.1 5555  250000    foo   1472       -1 " << std::endl;
+		std::cout << "e.g.:  ./client 127.0.0.1 5555  250000    foo   1472       -1 10 -1 " << std::endl;
 		std::cout << "\nor start server accepting remote RPC commands: \n";
-		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 9000 " << std::endl;
+		std::cout << "e.g.:  ./client remote_cmd 192.168.70.17 5555 " << std::endl;
 		std::cout << "or instead allow remote access (remote controll of this sending, WARNING can make your computer spam/DDoS other computer) " << std::endl;
 		std::cout << "e.g.:  ./client remote <listen_on_ip><port>  <authorized_ip> <max_time_minutes> <pass>  " << std::endl;
-		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   192.168.70.16   72 secret1" << std::endl;
-		std::cout << "e.g.:  ./client remote 192.168.70.17 9011   0.0.0.0         4  secret1" << std::endl;
-		std::cout << "e.g.:  ./client remote       0.0.0.0 9011   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 5011   192.168.70.16   72 secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote 192.168.70.17 5011   0.0.0.0         4  secret1" << std::endl;
+		std::cout << "e.g.:  ./client remote       0.0.0.0 5011   0.0.0.0         4  secret1" << std::endl;
 		std::cout << "then send TCP text like e.g.: \n";
 		print_usage_rpc_cmd();
 		std::cout << std::endl;
@@ -337,11 +337,13 @@ int c_maintask::run(int argc, const char * argv[])
 		}
 	}
 
-	double limit_data_gb = -1 ; // -1 means infinite
+	double limit_data_GiB = -1 ; // -1 means infinite
 	double limit_time_sec = -1 ; // -1 means infinite
 
 	if (argc > 7) limit_time_sec = atof(argv[7]);
-	if (argc > 8) limit_data_gb  = atof(argv[8]);
+	if (argc > 8) limit_data_GiB  = atof(argv[8]);
+
+	std::cerr << "Limit time: " << limit_time_sec << " sec (since start)" << std::endl;
 
 	mysocket.open( udp::v4() );
 	endpoint = * resolver.resolve({udp::v4(), host, port});
@@ -395,7 +397,7 @@ int c_maintask::run(int argc, const char * argv[])
 		time_print_next = time_start + conf_print_interval ; // when should we next time print the stats
 
 		target_speed_Mbit_sec = speed; // [MegaBit/sec]
-		target_speed = (target_speed_Mbit_sec/8); // [Byte/microSec]
+		target_speed_MByte_microsec = (target_speed_Mbit_sec/8) * (1000*1000); // [Byte/microSec]
 
 		packets_sent=0;
 		size_sent= 0;
@@ -426,11 +428,18 @@ int c_maintask::run(int argc, const char * argv[])
 			double ellapsed_now =  std::chrono::duration_cast<std::chrono::microseconds>
 				( time_now - time_start ).count(); // [microSec, since start]
 			auto size_next = size_sent + burst * request_length; // [Byte] that much data will be sent after next burst
-			auto ellapsed_next = size_next / target_speed; // [microSec]
-			auto sleep_next = ellapsed_next - ellapsed_now; // [microSec]
-			if (sleep_next > 0) {
+			auto ellapsed_target = (static_cast<double>(size_next)*1024*1024) / target_speed_MByte_microsec; // [microSec]
+			/*std::cerr << "ellapsed_now=" << ellapsed_now
+				<< "  ellapsed_target=" << ellapsed_target
+				<< " size_sent=" << size_sent << " size_next=" << size_next
+				<< std::endl;
+			*/
+			auto sleep_target = ellapsed_target - ellapsed_now; // [microSec]
+			if (sleep_target > 0) {
 				++counter_sleep_yes;
-				std::this_thread::sleep_for(std::chrono::microseconds( static_cast<long int>(sleep_next) ));
+				long int sleep_target_usec = static_cast<long int>(sleep_target);
+				// std::cerr << "Will sleep for " << sleep_target_usec << " usec" << std::endl;
+				std::this_thread::sleep_for(std::chrono::microseconds( sleep_target_usec ));
 			}
 			else ++counter_sleep_no;
 
@@ -440,7 +449,8 @@ int c_maintask::run(int argc, const char * argv[])
 
 				std::cout << "Sent: " << packets_sent << " pck, " << size_sent << " B" << ". "
 					<< speed_totall_Mbit << " Mbit/sec "
-					<< " limit=" << target_speed_Mbit_sec << " Burst= " << burst << " pck;"
+					<< " limit=" << target_speed_Mbit_sec << " Mbit/sec = " << target_speed_MByte_microsec << " MB/usec "
+					<< " Burst= " << burst << " pck;"
 					<< " Sleep: yes=" << counter_sleep_yes << ", no=" << counter_sleep_no
 					<< "\n"
 				;
@@ -450,8 +460,8 @@ int c_maintask::run(int argc, const char * argv[])
 						break;
 					}
 				}
-				if (limit_data_gb > 0)  {
-					if (size_sent >= (limit_data_gb*1024*1024*1024)) {
+				if (limit_data_GiB > 0)  {
+					if (size_sent >= (limit_data_GiB*1024*1024*1024)) {
 						pfp_info("Size limit reached, exiting");
 						break;
 					}
