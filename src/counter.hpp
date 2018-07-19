@@ -5,8 +5,6 @@
 #ifndef include_counter_hpp
 #define include_counter_hpp
 
-#include "libs1.hpp"
-
 class c_counter {
 	public:
 		typedef long long int t_count;

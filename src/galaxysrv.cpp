@@ -13,6 +13,10 @@
 
 #include "cable/kind.hpp"
 
+#include "datastore.hpp"
+#include "generate_crypto.hpp"
+#include "ui.hpp"
+
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
 #include "tuntap/windows/c_tuntap_windows.hpp"

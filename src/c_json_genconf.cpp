@@ -1,7 +1,7 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #include "c_json_genconf.hpp"
-
+#include <tnetdbg.hpp>
 
 
 void c_json_genconf::genconf() {

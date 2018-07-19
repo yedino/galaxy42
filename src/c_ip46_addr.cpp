@@ -14,7 +14,6 @@
 
 #include "cpputils.hpp"
 #include <netdb.h>
-#include <tnetdbg.hpp>
 
 c_ip46_addr::c_ip46_addr() : m_tag(tag_none) { }
 

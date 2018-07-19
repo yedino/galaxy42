@@ -2,6 +2,7 @@
 #include "tnetdbg.hpp"
 #include <thread>
 #include <chrono>
+#include "c_tun_device.hpp"
 
 #ifdef __linux__
 #include <limits>

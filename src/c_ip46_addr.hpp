@@ -3,11 +3,12 @@
 #ifndef C_IP46_ADDR_H
 #define C_IP46_ADDR_H
 
+#include <ostream>
+
 #ifdef __linux__
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include <ostream>
 #include <string>
 #include <sys/socket.h>
 
@@ -83,7 +84,6 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 #elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__)
 
 #include <boost/asio/ip/address.hpp>
-#include <ostream>
 class c_ip46_addr {
 	public:
 		typedef enum { tag_none, tag_ipv4, tag_ipv6 } t_tag; ///< possible address type

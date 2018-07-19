@@ -3,7 +3,6 @@
 #ifndef C_FILESYSTEM_HPP
 #define C_FILESYSTEM_HPP
 
-#include "libs0.hpp"
 #include "gtest/gtest_prod.h"
 
 #include <boost/filesystem.hpp>

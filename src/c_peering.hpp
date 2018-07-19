@@ -9,11 +9,11 @@
 #include "formats_ip.hpp"
 #include "c_ip46_addr.hpp"
 #include "haship.hpp"
-#include "protocol.hpp"
 
 #include "crypto/crypto_basic.hpp"
 #include "c_udp_wrapper.hpp"
 #include "httpdbg/peering_stats.hpp"
+#include "protocol.hpp"
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
