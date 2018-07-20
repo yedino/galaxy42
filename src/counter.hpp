@@ -5,6 +5,8 @@
 #ifndef include_counter_hpp
 #define include_counter_hpp
 
+#include <iosfwd>
+
 class c_counter {
 	public:
 		typedef long long int t_count;

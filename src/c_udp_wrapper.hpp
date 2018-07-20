@@ -1,6 +1,8 @@
 #ifndef C_UDP_WRAPPER_HPP
 #define C_UDP_WRAPPER_HPP
 
+#include <cstddef>
+
 class c_ip46_addr;
 
 // [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code

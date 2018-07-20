@@ -2,6 +2,8 @@
 
 
 #include "counter.hpp"
+#include <ctime>
+#include <iomanip>
 
 c_counter::c_counter(c_counter::t_count tick_len, bool is_main)
 	: m_tick_len(tick_len), m_is_main(is_main),
