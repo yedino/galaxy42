@@ -7,9 +7,9 @@ set -o nounset
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
-# import another functions
-. "${GALAXY_DIR}"/share/script/lib/fail.sh
-. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+# import other functions
+source "${GALAXY_DIR}"/share/script/lib/fail.sh
+source "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
 
 
 printf "\n\n=========================================================================\n\n"
@@ -163,7 +163,7 @@ echo "\nAll done regarding boost.\n"
 # ** building libsodium **
 pushd "${GALAXY_DIR}" || fail
 	# import build-sodium function
-	. contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
+	source contrib/gitian-descriptors/libsodium-build/build-sodium || fail "Failed to build dependence - libsodium for ${TARGET_ARCH}"
 
 	# Get TARGET_ARCH, build, and export SODIUM_BUILD_DIR
 	build-sodium ${TARGET_ARCH}
@@ -184,20 +184,33 @@ pushd "$GALAXY_DIR" || fail
 
 	printf "\n\nMoving on to main build of actually our project:"
 
+	printf "\n\n-------------------------------------------------------------------------\n\n"
+	print "Calling our ($PROJECT_NAME) cmake: "
+
+	set -x
 	cmake -DBOOST_ROOT="${BOOST_BUILD_DIR}" \
 	      -DSODIUM_ROOT_DIR="{$SODIUM_BUILD_DIR}" \
 	      -DSODIUM_LIBRARY="${SODIUM_BUILD_DIR}/lib/libsodium.dll.a" \
 	      -DSODIUM_INCLUDE_DIR="${SODIUM_BUILD_DIR}/include" \
 	      -DTARGET_ARCH="${TARGET_ARCH}" \
 	      -DCMAKE_TOOLCHAIN_FILE="cmake/toolchain_mingw.cmake.in" \
-	      -DCMAKE_BUILD_TYPE=Debug . \
+	      -DCMAKE_BUILD_TYPE=Debug ./ \
 	      	|| fail "cmake of our project failed"
+	set +x
 
+	print "Completed our ($PROJECT_NAME) cmake: "
+	printf "\n\n-------------------------------------------------------------------------\n\n"
+
+	set -x
 	make tunserver.elf || fail "make of our project (main binary) failed"
 	make galaxyService || fail "make of our project (main binary) failed"
+	set +x
+
+	printf "\n\n-------------------------------------------------------------------------\n\n"
 
 popd
 
+printf "\n\n=========================================================================\n\n"
 echo "Printing checksums:"
 sha256sum *.exe | sort
 sha256sum  "${GALAXY_DIR}/contrib/windows-service-wrapper/galaxyService.exe"

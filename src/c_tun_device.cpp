@@ -12,6 +12,14 @@
 // for NetPlatform utils - temporary solution
 #include "tuntap/base/tuntap_base.hpp"
 
+#if defined(__OpenBSD__)
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <net/if_tun.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/nd6.h>
+#include <stdexcept>
+#endif
 
 c_tun_device::c_tun_device()
  :
@@ -29,8 +37,7 @@ int c_tun_device::get_tun_fd() const {
 }
 
 
-#ifdef __linux__
-
+#if defined(__linux__)
 #include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
@@ -118,9 +125,9 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 	return static_cast<size_t>(ret);
 }
 
-//__linux__
-#elif defined(_WIN32) || defined(__CYGWIN__)
+#endif
 
+#if defined(_WIN32) || defined(__CYGWIN__)
 #include "tnetdbg.hpp"
 #include <boost/bind.hpp>
 #include <cassert>
@@ -528,8 +535,9 @@ void c_tun_device_windows::hkey_wrapper::close() {
 }
 
 // _win32 || __cygwin__
+#endif
 
-#elif defined(__MACH__)
+#if defined(__MACH__)
 #include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 #include <sys/kern_control.h>
@@ -666,8 +674,253 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
     return write_bytes;
 }
 // __MACH__
-#else
+#endif
 
+#if defined(__OpenBSD__)
+c_tun_device_openbsd::c_tun_device_openbsd() :
+m_ioservice(),
+m_tun_stream(m_ioservice, m_tun_fd) {
+    pfp_dbg1n("Prolog at " << __func__);
+    uint16_t scope;
+
+    // previous tun ??
+    scope = htons((uint16_t) if_nametoindex(IFNAME));
+    if (scope > 0) { // XXX: uncomment in  future
+	int sock;
+	pfp_warnn(IFNAME " exists");
+	//_throw_error( std::runtime_error("First destroy previous " IFNAME) );
+	sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
+	struct ifreq interface;
+	memset(&interface, 0, sizeof (struct ifreq));
+	strncpy(interface.ifr_name, IFNAME, sizeof (interface.ifr_name)); // if name
+	if (ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
+	    std::stringstream errorstring;
+	    char *serr = strerror(errno);
+	    errorstring << "SIOCIFDESTROY : " << serr;
+	    pfp_erro(errorstring.str());
+	    pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
+	} else {
+	    pfp_goal("Previous " IFNAME " destroyed.");
+	}
+    }
+    m_tun_fd = open("/dev/" IFNAME, O_RDWR);
+    if (m_tun_fd == -1) {
+	char *serr = strerror(errno);
+	std::stringstream errorstring;
+	errorstring << "ERRNO = " << serr << " , Some possible solutions: ";
+	switch (errno) {
+	    case EBUSY:
+		errorstring << "Maybe some process run in system ?";
+		break;
+	    case EACCES:
+		errorstring << "Maybe process must run with root privileges ?";
+		break;
+	    default:
+		errorstring << "Please describe errno " << errno;
+	}
+	pfp_warnn(errorstring.str());
+	pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
+    } else {
+	pfp_goal("Opened " IFNAME);
+    }
+}
+
+c_tun_device_openbsd::~c_tun_device_openbsd() {
+    pfp_goal("Closing " IFNAME);
+    close(m_tun_fd);
+    // XXX: duplicate code
+    uint16_t scope;
+    scope = htons((uint16_t) if_nametoindex(IFNAME));
+    if (scope > 0) { // XXX: uncomment in  future
+	int sock;
+	pfp_warnn(IFNAME " exists");
+	//_throw_error( std::runtime_error("First destroy previous " IFNAME) );
+	sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); // create socket, opts ???
+	struct ifreq interface;
+	memset(&interface, 0, sizeof (struct ifreq));
+	strncpy(interface.ifr_name, IFNAME, sizeof (interface.ifr_name)); // if name
+	if (ioctl(sock, SIOCIFDESTROY, &interface) == -1) {
+	    std::stringstream errorstring;
+	    char *serr = strerror(errno);
+	    errorstring << "SIOCIFDESTROY : " << serr;
+	    pfp_erro(errorstring.str());
+	    pfp_throw_error_sub(tuntap_error_devtun, errorstring.str());
+	} else {
+	    pfp_goal("Previous " IFNAME " destroyed.");
+	}
+    }
+}
+
+void c_tun_device_openbsd::init() {
+    pfp_dbg1n("Prolog at " << __func__);
+
+    struct tuninfo info;
+    
+    if (ioctl(m_tun_fd, TUNGIFINFO, &info) < 0) {
+	pfp_erron("Can't get interface info");
+    }
+    
+    #ifdef IFF_MULTICAST
+        info.flags |= IFF_MULTICAST;
+    #endif
+
+    if (ioctl(m_tun_fd, TUNSIFINFO, &info) < 0) {
+	pfp_erron( "Can't set interface info");
+    }
+}
+
+void c_tun_device_openbsd::set_ipv6_address(
+	const std::array<uint8_t, 16> &binary_address,
+	int prefixLen
+	) {
+    pfp_dbg1("Prolog at " << __func__);
+    int sock;
+    uint16_t scope;
+
+    pfp_goal("Create socket ...");
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    if (sock == -1) {
+	pfp_warnn(__func__);
+	throw std::runtime_error(std::string("Socket create problem"));
+    }
+
+    struct in6_aliasreq ifa6;
+    memset(&ifa6, 0, sizeof (struct in6_aliasreq));
+
+    strncpy(ifa6.ifra_name, IFNAME, sizeof (ifa6.ifra_name)); /* if name */
+
+    // convert addr6
+    char *baData = (char *) malloc(binary_address.size());
+    for (size_t index = 0; index < binary_address.size(); index++) {
+	baData[index] = binary_address.at(index);
+    }
+
+    ifa6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
+    ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
+
+    char temp[128];
+    pfp_goal("Setting addresses " \
+            << std::string(inet_ntop(AF_INET6, baData, temp, 128)) \
+            << "/" \
+            << prefixLen);
+    // address
+    ifa6.ifra_addr.sin6_family = AF_INET6;
+    ifa6.ifra_addr.sin6_len = sizeof (struct sockaddr_in6);
+    // dont convert, only copy addr6
+    //inetret = inet_pton(AF_INET6, (const char *)baData, &ifa6.ifra_addr.sin6_addr);
+    size_t toCopy = sizeof (ifa6.ifra_addr.sin6_addr);
+    //assert(baData[0] == 0xFD);
+    memcpy(&ifa6.ifra_addr.sin6_addr, baData, toCopy);
+    //if(inetret == -1) {
+    //    perror("inet_pton: addr");
+    //}
+
+    // destination address
+    //ifa6.ifra_dstaddr.sin6_family = AF_INET6;
+    //ifa6.ifra_dstaddr.sin6_len = sizeof(struct sockaddr_in6);
+    //inetret = inet_pton(AF_INET6, "fe80::02", &ifa6.ifra_dstaddr.sin6_addr);
+    //if(inetret == -1) {
+    //    perror("inet_pton: dstaddr");
+    //}
+
+    // netmask - prefixlen
+    ifa6.ifra_prefixmask.sin6_family = AF_INET6;
+    ifa6.ifra_prefixmask.sin6_len = sizeof (struct sockaddr_in6);
+    ipv6_mask(&ifa6.ifra_prefixmask.sin6_addr, prefixLen);
+
+    // scope id in address
+    scope = htons((uint16_t) if_nametoindex(IFNAME));
+    struct in6_addr *s6a1 = &ifa6.ifra_addr.sin6_addr;
+    memcpy(&s6a1[2], &scope, sizeof (uint16_t));
+    ifa6.ifra_addr.sin6_scope_id = 0;
+
+    // call add address
+    if (ioctl(sock, SIOCAIFADDR_IN6, &ifa6) == -1) {
+	pfp_erron("SIOCAIFADDR_IN6");
+    }
+
+    m_ip6_ok = true;
+    pfp_goal("IP address is fully configured");
+    close(sock);
+}
+
+void c_tun_device_openbsd::set_mtu(
+    uint32_t mtu
+    ) {
+    pfp_dbg1n("Prolog at " << __func__);
+    int sock;
+    struct ifreq interface;
+
+    memset(&interface, 0, sizeof (struct ifreq));
+
+    pfp_goal("Create socket ...");
+    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW); /* create socket, opts ??? */
+    if (sock == -1) {
+	pfp_warnn(__func__);
+	throw std::runtime_error(std::string("Socket create problem"));
+    }
+
+    strncpy(interface.ifr_name, IFNAME, sizeof (interface.ifr_name)); /* if name */
+    interface.ifr_ifru.ifru_metric = mtu;
+
+    pfp_goal("Setting MTU on " << IFNAME << " to " << mtu);
+    if (ioctl(sock, SIOCSIFMTU, &interface) == -1) {
+	pfp_erron("SIOCSIFMTU");
+    }
+
+    close(sock);
+}
+    
+bool c_tun_device_openbsd::incomming_message_form_tun() {
+    pfp_dbg1n("Prolog at " << __func__);
+    m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+    if (m_readed_bytes > 0) {
+	pfp_dbg1n("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
+	return true;
+    } else
+	return false;
+}
+
+size_t c_tun_device_openbsd::read_from_tun(
+	void *buf,
+	size_t count
+	) {
+    pfp_dbg1n("Prolog at " << __func__);
+    memset(buf, 0, count);
+    int rret = read_tun(m_tun_fd, buf, count);
+    //int rret = read(m_tun_fd, buf, count);
+    if (rret < 0) {
+	perror("read_tun");
+    } else {
+	pfp_goal("Read from " IFNAME);
+	return rret;
+    }
+    return 0;
+}
+
+size_t c_tun_device_openbsd::write_to_tun(
+	void *buf,
+	size_t count
+	) {
+    pfp_dbg1n("Prolog at " << __func__);
+    int wret = write_tun(m_tun_fd, buf, count);
+    //int wret = write(m_tun_fd, buf, count);
+    if (wret < 0) {
+	perror("write_tun");
+    } else {
+	pfp_goal("Write to " IFNAME);
+	return wret;
+    }
+    return 0;
+}
+
+int c_tun_device_openbsd::get_tun_fd() const {
+    pfp_dbg1n("Prolog at " << __func__);
+    return m_tun_fd;
+}
+#endif
+
+#if defined(EMPTY)
 c_tun_device_empty::c_tun_device_empty() { }
 
 void c_tun_device_empty::set_ipv6_address(const std::array<uint8_t, 16> &binary_address, int prefixLen) {
