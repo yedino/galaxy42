@@ -250,7 +250,7 @@ public:
 
 
 protected:
-    commandExecutor* m_executor;
+    commandExecutor* m_executor = nullptr;
     std::string m_account;
 };
 

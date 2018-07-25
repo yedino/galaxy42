@@ -450,17 +450,13 @@ std::string order::getPeerName()
 
 getClientName::getClientName( const std::string &json_str,commandExecutor *executor )
 {
-    try {
-        nlohmann::json j = nlohmann::json::parse( json_str );
-        m_state = j["state"];
-        m_id = j["id"];
-        if(m_state == "ok") {
-            m_account = j["account_address"];
-        }
-        m_executor = executor;
-    } catch( std::exception &e ) {
-        qDebug()<<e.what();
-    }
+	nlohmann::json j = nlohmann::json::parse( json_str );
+	m_state = j["state"];
+	m_id = j["id"];
+//	if(m_state == "ok") {
+//		m_account = j["account_address"];
+//	}
+	m_executor = executor;
 }
 
 std::string getClientName::get_str() const
@@ -475,6 +471,7 @@ void getClientName::execute( MainWindow & )
         QString id = QString::fromStdString( m_id );
         QString client_num= id.split( "-" ).at( 0 );
         client_num += "-cli";
+        assert(m_executor != nullptr);
         m_executor->setSenderRpcName( client_num );
     } else  {
 //        main_window.resetCommunication;
