@@ -28,7 +28,7 @@ namespace g_ipv6_rfc {
 // use: g_ipv6_rfc::header_position_of_src
 
 namespace g_tuntap {
-#ifdef __NetBSD__
+#if defined(ANTINET_netbsd)
 	constexpr unsigned char header_position_of_ipv6 = 0;
 #else
         constexpr unsigned char header_position_of_ipv6 = 4;
@@ -88,4 +88,3 @@ namespace unittest {
 bool addr_is_galaxy(c_haship_addr addr);
 
 #endif
-

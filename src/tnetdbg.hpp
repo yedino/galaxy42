@@ -4,7 +4,7 @@
 #ifndef C_TNETDBG_HPP
 #define C_TNETDBG_HPP
 
-
+#include "platform.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -191,7 +191,7 @@ auto constexpr debug_config_erro_backtrace_level = 128; ///< the backtrace level
 	#if defined(__MINGW32__)
 		#define __GNUC_PREREQ(major, minor)       __MINGW_GNUC_PREREQ(major, minor)
 	#endif
-        #if defined(__NetBSD__)
+        #if defined(ANTINET_netbsd)
                 #include <sys/cdefs.h>
                 #define __GNUC_PREREQ __GNUC_PREREQ__
         #endif

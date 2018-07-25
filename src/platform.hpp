@@ -14,7 +14,7 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 // see also stdplus/platform.hpp
 
 // in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
-#if __linux__
+#if defined(__linux__)
 	#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
 #elif defined(_WIN32) || defined(__CYGWIN__)
@@ -42,9 +42,10 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 	#define ANTINET_macosx
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
 #elif defined(__NetBSD__)
-        #define NetBSD 1
+        #define ANTINET_netbsd
         #define NUNUSED(x) (void)x 
         #define IFNAME "tun0"
+        #define ATTR_NODISCARD __attribute__((warn_unused_result)) // XXX: ?
 #else
 	#error Platform is not supported
 #endif

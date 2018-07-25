@@ -294,7 +294,7 @@ class c_tunserver : public c_galaxy_node {
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-                #elif defined(__NetBSD__)
+                #elif defined(ANTINET_netbsd)
                 c_tun_device_netbsd m_tun_device;
                 c_udp_wrapper_netbsd m_udp_device;
                 c_event_manager_netbsd m_event_manager;
@@ -361,7 +361,6 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet);
 
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
-
 
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);

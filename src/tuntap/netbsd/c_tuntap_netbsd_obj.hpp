@@ -1,7 +1,7 @@
 #ifndef C_TUNTAP_NETBSD_OBJ_HPP
 #define C_TUNTAP_NETBSD_OBJ_HPP
 
-#if defined(__NetBSD__)
+#if defined(ANTINET_netbsd)
 #include <platform.hpp>
 #include <boost/asio.hpp>
 #include <libs0.hpp>
@@ -27,9 +27,9 @@ class c_tuntap_system_functions final : public i_tuntap_system_functions {
         
         int ioctl(int fd, unsigned long request,  void *ifreq) override 
         { 
-            NUNUSED(fd);
-            NUNUSED(request);
-            NUNUSED(ifreq);
+            pfp_UNUSED(fd);
+            pfp_UNUSED(request);
+            pfp_UNUSED(ifreq);
             return 0; 
         };
         
@@ -38,18 +38,18 @@ class c_tuntap_system_functions final : public i_tuntap_system_functions {
                                         int prefixLen,
                                         int addrFam) override 
         { 
-            NUNUSED(interfaceName);
-            NUNUSED(address);
-            NUNUSED(prefixLen);
-            NUNUSED(addrFam);
+            pfp_UNUSED(interfaceName);
+            pfp_UNUSED(address);
+            pfp_UNUSED(prefixLen);
+            pfp_UNUSED(addrFam);
             return {0,0}; 
         };
                                         
         t_syserr NetPlatform_setMTU(const char* interfaceName,
                                     uint32_t mtu) override 
         { 
-           NUNUSED(interfaceName);
-            NUNUSED(mtu);
+            pfp_UNUSED(interfaceName);
+            pfp_UNUSED(mtu);
             return {0,0}; 
         };
 };
@@ -59,7 +59,7 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
     using stream_type = boost::asio::posix::stream_descriptor;
     
     public:
-       c_tuntap_netbsd_obj(); ///< construct this object, throws if error
+        c_tuntap_netbsd_obj(); ///< construct this object, throws if error
         c_tuntap_netbsd_obj(boost::asio::io_service &io_service);
         ~c_tuntap_netbsd_obj();
 

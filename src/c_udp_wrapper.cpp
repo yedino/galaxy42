@@ -8,8 +8,7 @@ c_udp_wrapper::c_udp_wrapper()
 { }
 
 
-#ifdef __linux__
-
+#if defined(__linux__)
 c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
@@ -65,12 +64,9 @@ int c_udp_wrapper_linux::get_socket() {
 	if (m_disabled) { pfp_dbg4("disabled socket"); return 0 ; }
 	return m_socket;
 }
+#endif
 
-
-// __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
-
-
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 #include <boost/bind.hpp>
 #if defined (__MINGW32__)
 	#undef _assert
@@ -132,9 +128,9 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-// __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
-#elif defined(__NetBSD__)
+#endif
 
+#if defined(ANTINET_netbsd)
 c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
@@ -164,17 +160,15 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", IFNAME);
         if (ioctl (m_socket, SIOCGIFINDEX, &ifr) < 0) {
             std::stringstream errorstring;
-            char *serr = strerror(errno);
-            errorstring<<"SIOCGIFINDEX : "<<serr;
+            errorstring<<"SIOCGIFINDEX : "<<strerror(errno);
             pfp_erro(errorstring.str());
             pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         } else {
             pfp_dbg5n("SIOCGIFINDEX : " << ifr.ifr_ifindex);
         }
         if(bind_result == -1) {
-            char *serr = strerror(errno);
             std::stringstream errorstring;
-            errorstring<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            errorstring<<"ERRNO = "<<strerror(errno)<<" , Some possible solutions: ";
             switch(errno) {
                 case EINVAL:
                     errorstring<<"You have invalid argument in bind()";
@@ -194,9 +188,8 @@ void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void 
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
 	ssize_t sto = sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
         if(sto == -1) {
-            char *serr = strerror(errno);
             std::stringstream errorstring;
-            errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            errorstring<<__func__<<" --> "<<"ERRNO = "<<strerror(errno)<<" , Some possible solutions: ";
             switch(errno) {
                 default:
                     errorstring<<"Please describe errno "<<errno;
@@ -213,9 +206,8 @@ size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_
 	socklen_t from_addr_raw_size = sizeof(from_addr_raw); // ^ size of it
 	auto size_read = recvfrom(m_socket, data_buf, data_buf_size, 0, reinterpret_cast<sockaddr*>( & from_addr_raw), & from_addr_raw_size);
         if(size_read == -1) {
-            char *serr = strerror(errno);
             std::stringstream errorstring;
-            errorstring<<__func__<<" --> "<<"ERRNO = "<<serr<<" , Some possible solutions: ";
+            errorstring<<__func__<<" --> "<<"ERRNO = "<<strerror(errno)<<" , Some possible solutions: ";
             switch(errno) {
                 default:
                     errorstring<<"Please describe errno "<<errno;
@@ -241,9 +233,9 @@ int c_udp_wrapper_netbsd::get_socket() {
 	if (m_disabled) { pfp_dbg4n("disabled socket"); return 0 ; }
 	return m_socket;
 }
+#endif
 
-#else
-
+#if defined(EMPTY)
 c_udp_wrapper_empty::c_udp_wrapper_empty(const int listen_port) {
 	pfp_UNUSED(listen_port);
 	pfp_dbg4("unimplemented socket");
@@ -263,6 +255,4 @@ size_t c_udp_wrapper_empty::receive_data(void *data_buf, const size_t data_buf_s
 	pfp_dbg4("unimplemented socket");
 	return 0;
 }
-
-// else
 #endif

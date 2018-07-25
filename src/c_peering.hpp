@@ -69,12 +69,13 @@ ostream & operator<<(ostream & ostr, const c_peering & obj);
 
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:
-		#ifdef __linux__
+		#if defined(__linux__)
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper);
-		// __linux__
-		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+                #endif
+		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_asio &udp_wrapper);
-                #elif defined(__NetBSD__)
+                #endif
+                #if defined(ANTINET_netbsd)
                 c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_netbsd &udp_wrapper);
 		#endif
 
@@ -85,12 +86,13 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 	private:
 
 		virtual void send_data_RAW_udp(const char * data, size_t data_size, int udp_socket); ///< direct write
-		#ifdef __linux__
+		#if defined(__linux__)
 		std::reference_wrapper<c_udp_wrapper_linux> m_udp_wrapper; // TODO: sahred_ptr ?
-		// __linux__
-		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+                #endif
+		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 		std::reference_wrapper<c_udp_wrapper_asio> m_udp_wrapper; // TODO: sahred_ptr ?
-                #elif defined(__NetBSD__)
+                #endif
+                #if defined(ANTINET_netbsd)
                 std::reference_wrapper<c_udp_wrapper_netbsd> m_udp_wrapper;
                 #endif
 };

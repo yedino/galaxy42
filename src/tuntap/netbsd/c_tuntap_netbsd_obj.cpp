@@ -1,4 +1,5 @@
-#if defined(__NetBSD__)
+#include "platform.hpp"
+#if defined(ANTINET_netbsd)
 #include "c_tuntap_netbsd_obj.hpp"
 
 /////////////////////////////////////////////////////////////////////

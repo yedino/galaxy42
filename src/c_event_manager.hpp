@@ -14,9 +14,7 @@ class c_event_manager {
 		virtual void init()=0; ///< call this to finish init of the object
 };
 
-
-
-#ifdef __linux__
+#if defined (__linux__)
 class c_tun_device_linux;
 class c_udp_wrapper_linux;
 #include <sys/select.h>
@@ -39,14 +37,14 @@ class c_event_manager_linux final : public c_event_manager {
 };
 
 // __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__) ||defined(__MACH__) || defined(__FreeBSD__)
+#endif
 
+#if defined(_WIN32) || defined(__CYGWIN__) ||defined(__MACH__) || defined(__FreeBSD__)
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
 	#endif
 #endif
-
 #include <functional>
 #if defined(_WIN32) || defined(__CYGWIN__)
 class c_tun_device_windows;
@@ -73,7 +71,7 @@ public:
 	virtual bool get_tun_packet() override;
 
 private:
-		int m_tun_fd;
+        int m_tun_fd;
 
         #if defined(_WIN32) || defined(__CYGWIN__)
 	std::reference_wrapper<c_tun_device_windows> m_tun_device;
@@ -86,8 +84,9 @@ private:
 };
 
 // _win32 || __cygwin__ || __MACH__
-#elif defined (__NetBSD__)
+#endif
 
+#if defined (ANTINET_netbsd)
 class c_tun_device_netbsd;
 class c_udp_wrapper_netbsd;
 
@@ -110,7 +109,9 @@ class c_event_manager_netbsd final : public c_event_manager {
 		const int m_udp_socket;
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 };
-#else
+#endif
+
+#if defined (EMPTY)
 #warning "using c_event_manager_empty = It can not work!"
 class c_tun_device_empty;
 class c_udp_wrapper_empty;
@@ -122,8 +123,6 @@ class c_event_manager_empty final : public c_event_manager {
 		bool receive_udp_packet();
 		bool get_tun_packet();
 };
-
-// else
 #endif
 
 #endif // C_EVENT_MANAGER_HPP

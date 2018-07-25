@@ -9,7 +9,6 @@
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }
 
-
 void datastore::save_string(t_datastore file_type,
 							  const std::string &filename,
 							  const std::string &data,
@@ -263,8 +262,8 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	auto pos = path.find_last_of(L"\\");
 	path.erase(pos);
 	b_fs::path user_home(path);        
-#elif defined(__NetBSD__)
-     b_fs::path user_home;
+#elif defined(ANTINET_netbsd)
+	b_fs::path user_home;
 	if (home_dir.size()==0) {
 		const char *home_env = getenv("HOME");
 		if (home_env == nullptr) {

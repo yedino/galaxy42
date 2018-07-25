@@ -874,7 +874,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());
 
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
-#elif defined(__NetBSD__)
+#elif defined(ANTINET_netbsd)
         using namespace boost::asio;
 	ip::address_v6::bytes_type ip_bytes;
 	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());
@@ -887,7 +887,6 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 	pfp_dbg1n("dst ipv6_str " << ip6_addr);
 	c_haship_addr ret_dst(c_haship_addr::tag_constr_by_addr_dot(), ip6_addr.to_string());	
 #endif
-
 	return std::make_pair( ret_src , ret_dst );
 }
 
@@ -1323,6 +1322,7 @@ nlohmann::json c_tunserver::rpc_get_status(const string &input_json)
 
 nlohmann::json c_tunserver::rpc_btc_get_address(const string &input_json)
 {
+	pfp_UNUSED(input_json);
 	nlohmann::json ret;
 	ret["cmd"] = "get_btc_address";
 	try {

@@ -20,8 +20,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
 include(cotire)
 
-include(CMakeDetermineSystem)
-
 message(STATUS "Build on system type : '${CMAKE_SYSTEM_NAME}'")
 
 if(MINGW)
@@ -205,9 +203,7 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (CMAKE_VERSION VERSION_LESS 3.1)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
-endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
@@ -496,7 +492,7 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 set(LIB_OPTIONAL_CAPNG "")
 if (UNIX AND NOT CYGWIN AND NOT APPLE)
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         message(STATUS "CAP-NG on Linux is ON")
         set(LIB_OPTIONAL_CAPNG "cap-ng")
     else()

@@ -43,7 +43,8 @@ void c_peering::print(ostream & ostr) const {
 }
 
 void c_peering::send_data(const char * data, size_t data_size) {
-	pfp_UNUSED(data); pfp_UNUSED(data_size);
+	pfp_UNUSED(data);
+	pfp_UNUSED(data_size);
 	pfp_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
 }
 
@@ -90,20 +91,23 @@ std::chrono::steady_clock::time_point c_peering::get_last_ping_time() {
 
 // ------------------------------------------------------------------
 
-#ifdef __linux__
+#if defined (__linux__)
 c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
 { }
+#endif
 
-#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
 { }
-#elif defined(__NetBSD__)
+#endif
+
+#if defined(ANTINET_netbsd)
 c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_netbsd &udp_wrapper)
 :
 	c_peering(ref),
@@ -112,7 +116,8 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_netbs
 #endif
 
 void c_peering_udp::send_data(const char * data, size_t data_size) {
-	pfp_UNUSED(data); pfp_UNUSED(data_size);
+	pfp_UNUSED(data);
+	pfp_UNUSED(data_size);
 	pfp_throw_error( std::runtime_error("Use send_data_udp") );
 }
 
@@ -163,7 +168,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	unsigned char * ciphertext_buf = protomsg.get() + header_size; // just-pointer to part of protomsg where to write the message!
 	unsigned long long ciphertext_buf_len = 0; // encryption will write here the resulting size
-    crypto_aead_chacha20poly1305_encrypt(ciphertext_buf, &ciphertext_buf_len, reinterpret_cast<const unsigned char *>(data), data_size, additional_data,
+	crypto_aead_chacha20poly1305_encrypt(ciphertext_buf, &ciphertext_buf_len, reinterpret_cast<const unsigned char *>(data), data_size, additional_data,
                                          additional_data_len, NULL, nonce, generated_shared_key);
 	unsigned long long protomsg_len = ciphertext_buf_len + header_size; // the output of crypto, plus the header in front
 
@@ -177,8 +182,8 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
 	pfp_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
-    raw.bytes += c_protocol::current_version;
-    raw.bytes += enum_to_int_safe<unsigned char>(cmd);
+	raw.bytes += c_protocol::current_version;
+	raw.bytes += enum_to_int_safe<unsigned char>(cmd);
 	raw.bytes += bin.bytes;
 	this->send_data_RAW_udp(raw.bytes.c_str(), raw.bytes.size(), udp_socket);
 }
