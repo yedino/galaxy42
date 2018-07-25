@@ -1428,12 +1428,17 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	// tuntap_mutex is not needed in creation
 	if (cfg_tuntap_use_real_tun) {
 		pfp_info("Create real TUN/TAP");
-#ifdef ANTINET_linux
+#if defined (ANTINET_linux)
 		tuntap = std::make_unique<c_tuntap_linux_obj>(*ios_tuntap.at(0));
-#elif defined (ANTINET_windows)
+#endif
+#if defined (ANTINET_windows)
 		tuntap = std::make_unique<c_tuntap_windows_obj>(*ios_tuntap.at(0));
-#elif defined (ANTINET_macosx)
+#endif
+#if defined (ANTINET_macosx)
 		tuntap = std::make_unique<c_tuntap_macosx_obj>(*ios_tuntap.at(0));
+#endif
+#if defined (ANTINET_netbsd)
+		tuntap = std::make_unique<c_tuntap_netbsd_obj>(*ios_tuntap.at(0));
 #endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);

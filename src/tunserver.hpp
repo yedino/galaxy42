@@ -280,29 +280,33 @@ class c_tunserver : public c_galaxy_node {
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
         #endif
-		string m_my_name; ///< a nice name, see set_my_name
-		//int m_tun_fd; ///< fd of TUN file
-		#ifdef __linux__
-		c_tun_device_linux m_tun_device;
-		c_udp_wrapper_linux m_udp_device;
-		c_event_manager_linux m_event_manager;
-		#elif defined(_WIN32) || defined(__CYGWIN__)
-		c_tun_device_windows m_tun_device;
-		c_udp_wrapper_asio m_udp_device;
+                string m_my_name; ///< a nice name, see set_my_name
+                //int m_tun_fd; ///< fd of TUN file
+                #ifdef __linux__
+                c_tun_device_linux m_tun_device;
+                c_udp_wrapper_linux m_udp_device;
+                c_event_manager_linux m_event_manager;
+                #elif defined(_WIN32) || defined(__CYGWIN__)
+                c_tun_device_windows m_tun_device;
+                c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#elif defined(__MACH__)
+                #elif defined(__MACH__)
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#else
-		c_tun_device_empty m_tun_device;
-		c_udp_wrapper_empty m_udp_device;
-		c_event_manager_empty m_event_manager;
-		#endif
-		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
+                #elif defined(ANTINET_netbsd)
+                c_tun_device_netbsd m_tun_device;
+                c_udp_wrapper_netbsd m_udp_device;
+                c_event_manager_netbsd m_event_manager;
+                #else
+                c_tun_device_empty m_tun_device;
+                c_udp_wrapper_empty m_udp_device;
+                c_event_manager_empty m_event_manager;
+                #endif
+                unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-        shared_ptr< boost::program_options::variables_map > m_argm;
+                shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
@@ -357,7 +361,6 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet);
 
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
-
 
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);

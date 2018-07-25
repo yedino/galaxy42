@@ -9,7 +9,6 @@
 overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(msg)
 { }
 
-
 void datastore::save_string(t_datastore file_type,
 							  const std::string &filename,
 							  const std::string &data,
@@ -262,7 +261,19 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	GetModuleFileNameW(hModule, &path[0], path.size());
 	auto pos = path.find_last_of(L"\\");
 	path.erase(pos);
-	b_fs::path user_home(path);
+	b_fs::path user_home(path);        
+#elif defined(ANTINET_netbsd)
+	b_fs::path user_home;
+	if (home_dir.size()==0) {
+		const char *home_env = getenv("HOME");
+		if (home_env == nullptr) {
+			// we want to read home directory from env but HOME env is not set
+			throw std::runtime_error("We cannot read HOME env");
+		}
+		user_home = b_fs::path(home_env);
+	} else {
+		user_home = b_fs::path(home_dir);
+	} 
 #endif
 	static bool first_run = true;
 	if(first_run) {

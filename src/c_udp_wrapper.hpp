@@ -1,7 +1,6 @@
 #ifndef C_UDP_WRAPPER_HPP
 #define C_UDP_WRAPPER_HPP
 
-
 #include "c_ip46_addr.hpp" // TODO make portable
 #include "c_event_manager.hpp"
 
@@ -18,8 +17,7 @@ class c_udp_wrapper {
 		bool m_disabled; ///< if true then this socket doesnt do anything
 };
 
-#ifdef __linux__
-
+#if defined(__linux__)
 // [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper_linux final : public c_udp_wrapper {
 	friend class c_event_manager_linux;
@@ -32,10 +30,9 @@ class c_udp_wrapper_linux final : public c_udp_wrapper {
 	private:
 		const int m_socket;
 };
+#endif
 
-// __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
-
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
@@ -62,12 +59,25 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 
 		void read_handle(const boost::system::error_code& error, size_t bytes_transferred);
 };
+#endif
 
-//  __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
-#else
+#if defined (ANTINET_netbsd)
+// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
+class c_udp_wrapper_netbsd final : public c_udp_wrapper {
+	friend class c_event_manager_netbsd;
+	public:
+		c_udp_wrapper_netbsd(const int listen_port);
+		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
+		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
+		int get_socket(); // TODO remove this
 
+	private:
+		const int m_socket;
+};
+#endif
+
+#if defined(EMPTY)
 #warning "using c_udp_wrapper_empty = It will not work (it's just a stump)!"
-
 // [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper_empty final : public c_udp_wrapper {
 	public:
@@ -76,9 +86,6 @@ class c_udp_wrapper_empty final : public c_udp_wrapper {
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
 		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 };
-
-// else
 #endif
-
 
 #endif // C_UDP_WRAPPER_HPP

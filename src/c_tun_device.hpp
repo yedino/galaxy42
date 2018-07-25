@@ -8,8 +8,11 @@
 #include "c_event_manager.hpp"
 #include <chrono>
 
+#include "platform.hpp"
+#include "tuntap/base/tuntap_base.hpp"
 #include "error_subtype.hpp"
 #include "syserror_use.hpp"
+#include <boost/asio.hpp>
 
 /// @thread
 std::string errno_to_string(int errno_copy); ///< Convert errno from C-lib into a string. Thread-safe function.
@@ -28,7 +31,7 @@ class c_tun_device {
 		virtual void init() = 0; ///< call before use
 
 		virtual void set_ipv6_address
-			(const std::array<uint8_t, 16> &binary_address, int prefixLen) = 0;
+			(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) = 0;
 		virtual void set_mtu(uint32_t mtu) = 0; ///< sets MTU. first use set_ipv6_address
 		virtual bool incomming_message_form_tun() = 0; ///< returns true if tun is readry for read
 		virtual size_t read_from_tun(void *buf, size_t count) = 0;
@@ -38,17 +41,16 @@ class c_tun_device {
 		virtual int get_tun_fd() const; ///< for POSIX-like systems, returns int fd of the tuntap file, e.g. for select()'ing it
 
     protected:
-        typedef std::chrono::system_clock time;
-        static const int number_of_tested_cards = 100;
-        static const int cards_testing_time = 5;
+                typedef std::chrono::system_clock time;
+                static const int number_of_tested_cards = 100;
+                static const int cards_testing_time = 5;
 
 };
 
-#ifdef __FreeBSD__
-
+#if defined(__FreeBSD__)
 class c_tun_device_freebsd final : public c_tun_device {
 	public:
-    friend class c_event_manager_linux; // for io_service etc?
+                friend class c_event_manager_linux; // for io_service etc?
 
 		c_tun_device_linux(){;}
 		virtual void init(){} override; ///< call before use
@@ -61,35 +63,53 @@ class c_tun_device_freebsd final : public c_tun_device {
 		size_t write_to_tun(void *buf, size_t count) override{return 0};
 
 		virtual int get_tun_fd() const override{return 0;};
-
-
+}
 #endif
 
-#ifdef __linux__
-
-class c_tun_device_linux final : public c_tun_device {
+#if defined(__NetBSD__)
+class c_tun_device_netbsd final : public c_tun_device {
+        using stream_type = boost::asio::posix::stream_descriptor;
 	public:
-    friend class c_event_manager_linux; // for io_service etc?
-
-		c_tun_device_linux();
-		virtual void init() override; ///< call before use
-
-		void set_ipv6_address
-			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+                friend class c_event_manager_netbsd; // for io_service etc?
+		c_tun_device_netbsd();
+                ~c_tun_device_netbsd();
+		virtual void init(); ///< call before use
+		void set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
 		void set_mtu(uint32_t mtu) override;
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
 		size_t write_to_tun(void *buf, size_t count) override;
-
 		virtual int get_tun_fd() const override;
+                int m_tun_fd = -1;
+                size_t m_readed_bytes;
+                boost::asio::io_service m_ioservice;
+                stream_type m_tun_stream;
+                int netbsd_modify_read_write_return(u_int32_t len);
+                int write_tun(int tun0, void *buf, int len);
+                int read_tun(int tun0, void *buf, int len);
+                int ipv6_mask(struct in6_addr *mask, int len);
+};
+#endif
 
+#if defined(__linux__)
+class c_tun_device_linux final : public c_tun_device {
+	public:
+                friend class c_event_manager_linux; // for io_service etc?
+		c_tun_device_linux();
+		virtual void init() override; ///< call before use
+		void set_ipv6_address
+			(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
+		void set_mtu(uint32_t mtu) override;
+		bool incomming_message_form_tun() override;
+		size_t read_from_tun(void *buf, size_t count) override;
+		size_t write_to_tun(void *buf, size_t count) override;
+		virtual int get_tun_fd() const override;
 	private:
 		int m_tun_fd; ///< the fd for TUN
 };
+#endif
 
-// __linux__
-#elif defined(_WIN32) || defined(__CYGWIN__)
-
+#if defined(_WIN32) || defined(__CYGWIN__)
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
@@ -109,20 +129,18 @@ class c_tun_device_linux final : public c_tun_device {
 class c_tun_device_windows final : public c_tun_device, c_is_user_admin {
 	//friend class c_ndp;
 public:
-  friend class c_event_manager_asio; // for io_service etc?
+        friend class c_event_manager_asio; // for io_service etc?
 
 	c_tun_device_windows();
 	virtual void init() override; ///< call before use
 
 	void set_ipv6_address
-		(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+		(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
 	void set_mtu(uint32_t mtu) override {}; // TODO
 	bool incomming_message_form_tun() override; ///< returns true if tun is ready for read
 	size_t read_from_tun(void *buf, size_t count) override; ///< count must be <= size of buffer in buf! otherwise UB
         size_t write_to_tun(void *buf, size_t count) override; ///< count must be <= the size of buffer in buf! otherwise UB
-
-																 //constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
-
+        //constexpr int m_buffer_size = 9000; ///< the buffer size. This can affect size of MTU that this TUN can offer maybe
 private:
 	std::wstring m_guid;
 	boost::asio::io_service m_ioservice;
@@ -131,7 +149,6 @@ private:
 	HANDLE m_handle; ///< windows handle to the TUN device
 	std::unique_ptr<boost::asio::windows::stream_handle> m_stream_handle_ptr; ///< boost handler to the TUN device
 	std::array<uint8_t, 6> m_mac_address;
-
 	std::vector<std::wstring> get_subkeys(HKEY hKey); ///< for windows registry
 	std::wstring get_device_guid(); ///< technical name of the device
 	std::wstring get_human_name(const std::wstring &guid);
@@ -139,7 +156,6 @@ private:
 	HANDLE get_device_handle();
 	HANDLE open_tun_device(const std::wstring &guid); // returns opened handle for guid or INVALID_HANDLE_VALUE
 	std::array<uint8_t, 6> get_mac(HANDLE handle); // get handle to opened device (returned by get_device_handle())
-
 	void handle_read(const boost::system::error_code& error, std::size_t length); ///< ASIO handler
 	class hkey_wrapper final {
 		public:
@@ -161,18 +177,17 @@ private:
 			bool m_is_open;
 	};
 };
+#endif
 
-// _win32 || __cygwin__
-#elif defined(__MACH__)
+#if defined(__MACH__)
 #include <boost/asio.hpp>
 class c_tun_device_apple final : public c_tun_device {
 public:
-  friend class c_event_manager_asio; // for io_service etc?
-
+    friend class c_event_manager_asio; // for io_service etc?
     c_tun_device_apple();
-		virtual void init() override; ///< call before use
+    virtual void init() override; ///< call before use
     void set_ipv6_address
-            (const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+            (const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
     void set_mtu(uint32_t mtu) override;
     bool incomming_message_form_tun() override; ///< returns true if tun is readry for read
     size_t read_from_tun(void *buf, size_t count) override;
@@ -183,27 +198,25 @@ private:
     std::unique_ptr<boost::asio::posix::stream_descriptor> m_stream_handle_ptr; ///< boost handler to the TUN device
     std::array<uint8_t, 9000> m_buffer;
     size_t m_readed_bytes; ///< currently read bytes that await in m_buffer
-
-		virtual int get_tun_fd() const override;
-		int create_tun_fd();
+    virtual int get_tun_fd() const override;
+    int create_tun_fd();
     void handle_read(const boost::system::error_code &error, size_t length);
 };
-#else
+#endif
 
+#if defined(EMPTY)
 #warning "using c_tun_device_empty = It can not work!"
 class c_tun_device_empty final : public c_tun_device {
 	public:
 		c_tun_device_empty();
 		void init(); ///< call before use
 		void set_ipv6_address
-			(const std::array<uint8_t, 16> &binary_address, int prefixLen) override;
+			(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
 		void set_mtu(uint32_t mtu) override;
 		bool incomming_message_form_tun() override;
 		size_t read_from_tun(void *buf, size_t count) override;
 		size_t write_to_tun(const void *buf, size_t count) override;
 };
-
-// else
 #endif
 
 #endif // C_TUN_DEVICE_HPP

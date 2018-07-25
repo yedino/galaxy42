@@ -1,4 +1,3 @@
-
 #include "galaxysrv.hpp"
 #include "libs1.hpp"
 
@@ -15,8 +14,15 @@
 #include "cable/kind.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
+#if defined(ANTINET_linux)
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
+#endif
+#if defined(ANTINET_windows)
 #include "tuntap/windows/c_tuntap_windows.hpp"
+#endif
+#if defined(ANTINET_netbsd)
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
+#endif
 
 #include <boost/filesystem.hpp> // for flag-file
 #include <ipv6.hpp>
@@ -28,13 +34,10 @@
 
 // constexpr int cfg_jobs_tuntap_threads = 4;
 
-
 void asiotest();
 
 void c_galaxysrv::main_loop() {
-
 	asiotest();
-
 #if 0
 	pfp_goal("\n\nMain loop (new loop)\n\n");
 
@@ -464,4 +467,3 @@ void c_galaxysrv::program_action_gen_key(const boost::program_options::variables
 		pfp_throw_error( std::invalid_argument("--new-key or --new-key-file option is required for --gen-key") );
 	}
 }
-

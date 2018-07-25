@@ -1,7 +1,6 @@
-
-
 // need this to have the strerror_s - as in http://en.cppreference.com/w/c/string/byte/strerror point 3
 // this must be on top, must be first inclusion of <string> (in this compilation / translation unit)
+#include "platform.hpp"
 #define __STDC_WANT_LIB_EXT1__ 1
 #include <string>
 #if (!defined(__STDC_LIB_EXT1__))
@@ -56,6 +55,10 @@ std::string errno_to_string(int errno_copy) {
 
 		buf[buflen-1]=0; // guarantee string terminates
 		std::string ret(buf);
+	#elif defined(ANTINET_netbsd)
+                strerror_r(errno_copy, buf, buflen);
+                buf[buflen-1]=0;
+                std::string ret(buf);
 	#else
 
 		// char *strerror_r(int errnum, char *buf, size_t buflen);  /* GNU-specific */

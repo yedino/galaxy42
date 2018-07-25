@@ -1,7 +1,8 @@
-
 #pragma once
 
 // see also platform.hpp in top project
+
+#include "../platform.hpp"
 
 #if __linux__
 	#define stdplus_platform_linux
@@ -23,6 +24,10 @@
 #elif (__MACH__)
 
 	#define stdplus_platform_macosx
+
+#elif defined(ANTINET_netbsd)
+
+        #define stdplus_platform_netbsd
 
 #else
 
