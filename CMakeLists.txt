@@ -20,8 +20,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
 include(cotire)
 
-message(STATUS "Build on system type : '${CMAKE_SYSTEM_NAME}'")
-
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 #	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
@@ -564,7 +562,8 @@ if (TOOLS_ARE_BROKEN)
 	add_definitions(-DTOOLS_ARE_BROKEN=1)
 endif()
 
-message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Build on system type:          ${CMAKE_SYSTEM_NAME}")
+message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID} (Version ${CMAKE_CXX_COMPILER_VERSION})")
 message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")
