@@ -37,7 +37,7 @@ class quickStartDialog : public QWidget
     Q_OBJECT
 
 public:
-    explicit quickStartDialog(QWidget *parent = 0);
+	explicit quickStartDialog(QWidget *parent = nullptr);
     ~quickStartDialog();
 
     void setIps(const QString &ip,const QString &vip);
