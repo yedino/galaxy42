@@ -5,7 +5,7 @@ set (CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 
-set(WITH_TOOLS NO)
+set(WITH_TOOLS NO CACHE BOOL "")
 add_subdirectory(../depends/libqrencode build)
 
 file(GLOB src
@@ -39,5 +39,3 @@ target_include_directories(simpleGui PRIVATE
     ${SODIUM_INCLUDE_DIR}
     ../depends/libqrencode
 )
-
-message("CMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}")
