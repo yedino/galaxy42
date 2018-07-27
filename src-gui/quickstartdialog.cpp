@@ -79,12 +79,12 @@ void quickStartDialog::on_QrScanButton_clicked()
 
 void quickStartDialog::on_QrZoomButton_clicked()
 {
-	QRcode *qr = QRcode_encodeString(ui->myInviteEdit->text().toStdString().c_str(), 1, QR_ECLEVEL_L, QR_MODE_8, 0);
+	QRcode *qr = QRcode_encodeString(ui->myInviteEdit->text().toStdString().c_str(), 1, QR_ECLEVEL_L, QR_MODE_8, 1);
 	if( !qr )
 		throw std::runtime_error("Invalid QR generation!!!");
 
 	QPixmap qr_code;
-	unsigned char rect_size = 7;
+	unsigned char rect_size = 6;
 	QImage tmp(qr->width*rect_size, qr->width*rect_size, QImage::Format::Format_RGB32);
 	QColor color(Qt::white);
 	tmp.fill(color);
