@@ -66,13 +66,13 @@ class c_tun_device_freebsd final : public c_tun_device {
 }
 #endif
 
-#if defined(__NetBSD__)
-class c_tun_device_netbsd final : public c_tun_device {
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+class c_tun_device_bsd final : public c_tun_device {
         using stream_type = boost::asio::posix::stream_descriptor;
 	public:
-                friend class c_event_manager_netbsd; // for io_service etc?
-		c_tun_device_netbsd();
-                ~c_tun_device_netbsd();
+                friend class c_event_manager_bsd; // for io_service etc?
+		c_tun_device_bsd();
+                ~c_tun_device_bsd();
 		virtual void init(); ///< call before use
 		void set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) override;
 		void set_mtu(uint32_t mtu) override;
@@ -80,14 +80,15 @@ class c_tun_device_netbsd final : public c_tun_device {
 		size_t read_from_tun(void *buf, size_t count) override;
 		size_t write_to_tun(void *buf, size_t count) override;
 		virtual int get_tun_fd() const override;
-                int m_tun_fd = -1;
-                size_t m_readed_bytes;
-                boost::asio::io_service m_ioservice;
-                stream_type m_tun_stream;
                 int netbsd_modify_read_write_return(u_int32_t len);
                 int write_tun(int tun0, void *buf, int len);
                 int read_tun(int tun0, void *buf, int len);
                 int ipv6_mask(struct in6_addr *mask, int len);
+                
+                int m_tun_fd = -1;
+                size_t m_readed_bytes;
+                boost::asio::io_service m_ioservice;
+                stream_type m_tun_stream;
 };
 #endif
 

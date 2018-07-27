@@ -91,7 +91,8 @@ std::chrono::steady_clock::time_point c_peering::get_last_ping_time() {
 
 // ------------------------------------------------------------------
 
-#if defined (__linux__)
+
+#if defined(__linux__)
 c_peering_udp::c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_linux &udp_wrapper)
 :
 	c_peering(ref),
@@ -107,8 +108,8 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 { }
 #endif
 
-#if defined(ANTINET_netbsd)
-c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_netbsd &udp_wrapper)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_bsd &udp_wrapper)
 :
 	c_peering(ref),
 	m_udp_wrapper(udp_wrapper)
@@ -120,7 +121,6 @@ void c_peering_udp::send_data(const char * data, size_t data_size) {
 	pfp_UNUSED(data_size);
 	pfp_throw_error( std::runtime_error("Use send_data_udp") );
 }
-
 
 // TODO unify array types! string_as_bin , unique_ptr to new c-array, raw c-array in libproto etc
 
@@ -193,7 +193,6 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 	pfp_info("UDP send to peer RAW. To IP: " << m_peering_addr <<
 		", RAW-DATA: " << to_debug_b(std::string(data,data_size)) );
 
-	//#ifdef __linux__
 	switch (m_peering_addr.get_ip_type()) {
 		case c_ip46_addr::t_tag::tag_ipv4 : {
 			m_udp_wrapper.get().send_data(m_peering_addr, data, data_size);
@@ -208,6 +207,5 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 			pfp_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
 		}
 	}
-	//#endif
 }
 

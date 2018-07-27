@@ -2,11 +2,10 @@
 #define C_TUNTAP_NETBSD_OBJ_HPP
 
 #if defined(ANTINET_netbsd)
-#include <platform.hpp>
+#include "platform.hpp"
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 
-// NetBSD
 #include <sys/socket.h>
 #include <net/if_tun.h>
 #include <netinet6/in6_var.h>
@@ -171,7 +170,7 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
             boost::asio::io_service             m_io_service;
             stream_type                         m_tun_stream;
             sys_functions_wrapper               sys_fun;
-            c_tun_device_netbsd                 tundn;
+            c_tun_device_bsd                    tundn;
 };
 #endif
 

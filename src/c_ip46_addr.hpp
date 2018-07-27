@@ -105,11 +105,10 @@ class c_ip46_addr {
 };
 #endif
 
-#if defined (ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
 #include <boost/asio/ip/address.hpp>
 #include <ostream>
 #include <netinet/in.h>
-#include <netinet6/in6.h>
 
 class c_ip46_addr {
 	public:

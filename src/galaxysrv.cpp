@@ -23,6 +23,9 @@
 #if defined(ANTINET_netbsd)
 #include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
 #endif
+#if defined(ANTINET_openbsd)
+#include "tuntap/openbsd/c_tuntap_openbsd_obj.hpp"
+#endif
 
 #include <boost/filesystem.hpp> // for flag-file
 #include <ipv6.hpp>

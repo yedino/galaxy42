@@ -48,7 +48,7 @@ class wrap_thread {
 
 		/// It will wait at most around "duration" time, and if thread is not joined by then then it return false;
 		/// otherwise it returns true; if thread is joined (e.g. the thread finished, or it was an empty thread).
-		ATTR_NODISCARD bool try_join(std::chrono::duration<double> duration);
+		bool try_join(std::chrono::duration<double> duration);
 
 		~wrap_thread();
 

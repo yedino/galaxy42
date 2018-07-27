@@ -10,9 +10,9 @@ overwrite_error::overwrite_error(const std::string &msg) : std::runtime_error(ms
 { }
 
 void datastore::save_string(t_datastore file_type,
-							  const std::string &filename,
-							  const std::string &data,
-							  bool overwrite) {
+    const std::string &filename,
+    const std::string &data,
+    bool overwrite) {
 
 	if (filename == "") {
 		pfp_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
@@ -43,9 +43,9 @@ void datastore::save_string(t_datastore file_type,
 }
 
 void datastore::save_string_mlocked(t_datastore file_type,
-									  const std::string &filename,
-									  const sodiumpp::locked_string &locked_data,
-									  bool overwrite) {
+    const std::string &filename,
+    const sodiumpp::locked_string &locked_data,
+    bool overwrite) {
 
 	if (filename == "") {
 		pfp_throw_error( std::invalid_argument("Fail to open file for write: empty filename") );
@@ -84,7 +84,7 @@ sodiumpp::locked_string datastore::load_string_mlocked(const std::string &filena
 }
 
 std::string datastore::load_string(t_datastore file_type,
-								   const std::string &filename) {
+    const std::string &filename) {
 	pfp_dbg4("Load string - filename : [" << filename << "]");
 	std::string content;
 	std::string file_with_path_str;
@@ -115,7 +115,7 @@ std::string datastore::load_string(t_datastore file_type,
 }
 
 sodiumpp::locked_string datastore::load_string_mlocked(t_datastore file_type,
-													   const std::string &filename) {
+    const std::string &filename) {
 	pfp_dbg4("Load string mlocked- filename : [" << filename << "]");
 	try {
 		FILE * f_ptr;
@@ -210,7 +210,7 @@ std::vector<std::string> datastore::get_file_list(const boost::filesystem::path 
 }
 
 b_fs::path datastore::get_full_path(t_datastore file_type,
-								   const std::string &filename) {
+    const std::string &filename) {
 
 	b_fs::path full_path = get_parent_path(file_type, filename);
 	full_path += filename;
@@ -240,9 +240,9 @@ b_fs::path datastore::get_full_path(t_datastore file_type,
 }
 
 b_fs::path datastore::get_parent_path(t_datastore file_type,
-									const std::string &filename) {
+    const std::string &filename) {
 
-#if defined(__linux__) || defined(__MACH__)
+	#if defined(__linux__) || defined(__MACH__)
 	b_fs::path user_home;
 	if (home_dir.size()==0) {
 		const char *home_env = getenv("HOME");
@@ -254,15 +254,19 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	} else {
 		user_home = b_fs::path(home_dir);
 	}
-#elif defined(_WIN32) || defined(__CYGWIN__)
+	#endif
+	
+	#if defined(_WIN32) || defined(__CYGWIN__)
 	//b_fs::path user_home(getenv("APPDATA"));
 	HMODULE hModule = GetModuleHandleW(nullptr);
 	std::wstring path(MAX_PATH, '\0');
 	GetModuleFileNameW(hModule, &path[0], path.size());
 	auto pos = path.find_last_of(L"\\");
 	path.erase(pos);
-	b_fs::path user_home(path);        
-#elif defined(ANTINET_netbsd)
+	b_fs::path user_home(path);
+	#endif
+        
+	#if defined(ANTINET_netbsd)
 	b_fs::path user_home;
 	if (home_dir.size()==0) {
 		const char *home_env = getenv("HOME");
@@ -274,7 +278,22 @@ b_fs::path datastore::get_parent_path(t_datastore file_type,
 	} else {
 		user_home = b_fs::path(home_dir);
 	} 
-#endif
+	#endif
+	
+	#if defined(ANTINET_openbsd)   
+	b_fs::path user_home;
+	if (home_dir.size() == 0) {
+	    const char *home_env = getenv("HOME");
+	    if (home_env == nullptr) {
+		// we want to read home directory from env but HOME env is not set
+		throw std::runtime_error("We cannot read HOME env");
+	    }
+	    user_home = b_fs::path(home_env);
+	} else {
+	    user_home = b_fs::path(home_dir);
+	}
+	#endif
+
 	static bool first_run = true;
 	if(first_run) {
 		pfp_goal(mo_file_reader::gettext("L_get_home_directory: ") << " "<< user_home.c_str());
@@ -320,8 +339,8 @@ void datastore::set_home(const std::string &home) {
 }
 
 b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
-											 const std::string &input_name,
-											 bool overwrite) {
+    const std::string &input_name,
+    bool overwrite) {
 	b_fs::path file_with_path;
 	try {
 
@@ -377,7 +396,7 @@ b_fs::path datastore::prepare_path_for_write(t_datastore file_type,
 }
 
 b_fs::path datastore::create_path_for(t_datastore file_type,
-									  const std::string &filename) {
+    const std::string &filename) {
 
 	// connect parent path with filename
 	b_fs::path full_path = get_full_path(file_type, filename);
@@ -392,7 +411,6 @@ std::string datastore::extract_filename(const std::string &string_path) {
 }
 
 bool datastore::create_parent_dir(const b_fs::path &file_path) {
-
 	b_fs::path file(file_path);
 	b_fs::path parent_path = file.parent_path();
 

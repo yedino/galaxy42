@@ -676,9 +676,9 @@ c_crypto_benchloop<F, allow_mt, max_threads_count>
 }
 
 void nothing() { // TODO
-//	thread_local volatile bool x;
-//	x=1;
-
+	thread_local volatile bool x;
+	x=1;
+        pfp_UNUSED(x);
 }
 
 enum class e_crypto_test {
@@ -1439,6 +1439,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 #endif
 #if defined (ANTINET_netbsd)
 		tuntap = std::make_unique<c_tuntap_netbsd_obj>(*ios_tuntap.at(0));
+#endif                
+#if defined (ANTINET_openbsd)
+                tuntap = std::make_unique<c_tuntap_openbsd_obj>(*ios_tuntap.at(0));
 #endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);
@@ -1505,7 +1508,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	for (int tuntap_socket_nr=0; tuntap_socket_nr<cfg_num_socket_tuntap; ++tuntap_socket_nr) {
 		pfp_note("Creating workflow (blocking - thread) for tuntap, socket="<<tuntap_socket_nr);
 
-		constexpr int size_tuntap_maxread = cfg_size_tuntap_maxread;
+		constexpr size_t size_tuntap_maxread = cfg_size_tuntap_maxread;
 		auto func_send_weld = [tuntap_socket_nr, &wire_socket, &peer_pegs, &welds, &welds_mutex, &key_buf
 		                      , &nonce_buf](int send_weld_nr) { // lambda
 			size_t my_random = (tuntap_socket_nr*437213)%38132 + std::rand();

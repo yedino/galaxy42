@@ -20,6 +20,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
 include(cotire)
 
+include(CMakeDetermineSystem)
+
+message(STATUS "Build on system type : '${CMAKE_SYSTEM_NAME}'")
+
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 #	include_directories(depends/gettext/gettext-0.19.8/install_dir/include/)
@@ -204,7 +208,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fdiagnostics-color=always")
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
@@ -429,10 +433,25 @@ include_directories( src-tools/netmodel/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/*
-	src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/* src/tuntap/fake_tun/* src/tuntap/netbsd/*
-	src/test/special_behaviour/*
+file(GLOB SOURCES_GROUP_TUNSERVER
+    src/* 
+    src/httpdbg/* 
+    src/utils/* 
+    src/stdplus/* 
+    src/cable/* 
+    src/cable/base/* 
+    src/cable/simulation/* 
+    src/cable/udp/*
+    src/cable/shm/cable_shm_addr.cpp 
+    src/tuntap/base/* src/tuntap/linux/* 
+    src/tuntap/windows/* 
+    src/tuntap/macosx/* 
+    src/tuntap/fake_tun/* 
+    src/tuntap/netbsd/* 
+    src/tuntap/openbsd/* 
+    src/test/special_behaviour/*
 )
+
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp

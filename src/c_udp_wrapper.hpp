@@ -61,16 +61,14 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 };
 #endif
 
-#if defined (ANTINET_netbsd)
-// [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
-class c_udp_wrapper_netbsd final : public c_udp_wrapper {
-	friend class c_event_manager_netbsd;
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+class c_udp_wrapper_bsd final : public c_udp_wrapper {
+	friend class c_event_manager_bsd;
 	public:
-		c_udp_wrapper_netbsd(const int listen_port);
+		c_udp_wrapper_bsd(const int listen_port);
 		void send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) override;
 		size_t receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) override;
 		int get_socket(); // TODO remove this
-
 	private:
 		const int m_socket;
 };

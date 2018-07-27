@@ -28,7 +28,7 @@ namespace g_ipv6_rfc {
 // use: g_ipv6_rfc::header_position_of_src
 
 namespace g_tuntap {
-#if defined(ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
 	constexpr unsigned char header_position_of_ipv6 = 0;
 #else
         constexpr unsigned char header_position_of_ipv6 = 4;

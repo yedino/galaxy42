@@ -3,12 +3,11 @@
 #include "c_ip46_addr.hpp"
 #include <libs0.hpp>
 
-
 // ==================================================================
 // LINUX version
 // ==================================================================
 
-#if defined (__linux__)
+#if defined(__linux__)
 #include "cpputils.hpp"
 #include <netdb.h>
 
@@ -34,6 +33,7 @@ void c_ip46_addr::set_ip4(sockaddr_in in4) {
 	m_tag = tag_ipv4;
 	this->m_ip_data.in4 = in4;
 }
+
 void c_ip46_addr::set_ip6(sockaddr_in6 in6) {
 	pfp_assert(in6.sin6_family == AF_INET6);
 	m_tag = tag_ipv6;
@@ -46,6 +46,7 @@ sockaddr_in  c_ip46_addr::get_ip4() const {
 	pfp_assert(ret.sin_family == AF_INET);
 	return ret;
 }
+
 sockaddr_in6 c_ip46_addr::get_ip6() const {
 	pfp_assert(m_tag == tag_ipv6);
 	auto ret = this->m_ip_data.in6;
@@ -95,7 +96,6 @@ int c_ip46_addr::get_assigned_port() const {
 	return 0;
 }
 
-
 bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	as_zerofill< addrinfo > hint;
 	struct addrinfo *result = nullptr;
@@ -116,7 +116,6 @@ bool c_ip46_addr::is_ipv4(const string &ipstr) {
 	}
 	pfp_assert(false);
 }
-
 
 ostream & operator<<(ostream &out, const c_ip46_addr& addr) {
 	if (addr.m_tag == c_ip46_addr::tag_ipv4) {
@@ -253,7 +252,7 @@ void c_ip46_addr::set_port(int new_port) {
 }
 #endif
 
-#if defined(ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
 #include "cpputils.hpp"
 #include <netdb.h>
 

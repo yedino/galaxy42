@@ -9,7 +9,7 @@
 
 #include <cstring>
 
-#if defined(ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if_tun.h>
@@ -20,8 +20,6 @@
 
 // for NetPlatform utils - temporary solution
 #include "tuntap/base/tuntap_base.hpp"
-
-#include "platform.hpp"
 
 c_tun_device::c_tun_device()
  :
@@ -37,7 +35,6 @@ void c_tun_device::init() { }
 int c_tun_device::get_tun_fd() const {
 	pfp_throw_error(std::runtime_error("Trying to get tun_fd of a basic generic tun device."));
 }
-
 
 #if defined(__linux__)
 #include <cassert>
@@ -674,11 +671,12 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 }
 #endif
 
-#if defined(ANTINET_netbsd)
-c_tun_device_netbsd::c_tun_device_netbsd() :
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+c_tun_device_bsd::c_tun_device_bsd() :
 	m_ioservice(),
 	m_tun_stream(m_ioservice, m_tun_fd)
 {
+
     pfp_dbg1n("Prolog at " << __func__);
     uint16_t scope;
 
@@ -721,7 +719,7 @@ c_tun_device_netbsd::c_tun_device_netbsd() :
     }
 }
 
-c_tun_device_netbsd::~c_tun_device_netbsd()
+c_tun_device_bsd::~c_tun_device_bsd()
 {
     pfp_goal("Closing " IFNAME);
     close(m_tun_fd);
@@ -747,9 +745,11 @@ c_tun_device_netbsd::~c_tun_device_netbsd()
     }
 }
 
-void c_tun_device_netbsd::init() 
+void c_tun_device_bsd::init() 
 {
     pfp_dbg1n("Prolog at " << __func__);
+    
+    #if defined(ANTINET_netbsd)
     int i;
     
     i = IFF_POINTOPOINT|IFF_MULTICAST;
@@ -775,13 +775,26 @@ void c_tun_device_netbsd::init()
     } else {
         pfp_goal("Set flags: TUNSIFHEAD : " << i);
     }
+    #endif
+    
+    #if defined(ANTINET_openbsd)
+    struct tuninfo info;
+    
+    if (ioctl(m_tun_fd, TUNGIFINFO, &info) < 0) {
+	pfp_erron("Can't get interface info");
+    }
+    
+    #ifdef IFF_MULTICAST
+        info.flags |= IFF_MULTICAST;
+    #endif
+
+    if (ioctl(m_tun_fd, TUNSIFINFO, &info) < 0) {
+	pfp_erron( "Can't set interface info");
+    }
+    #endif
 }
 
-void c_tun_device_netbsd::set_ipv6_address(
-    const std::array<uint8_t, IPV6_LEN> &binary_address, 
-    int prefixLen
-) {
-    pfp_dbg1n("Prolog at " << __func__);
+void c_tun_device_bsd::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &binary_address, int prefixLen) {
     int sock;
     uint16_t scope;
     
@@ -841,65 +854,53 @@ void c_tun_device_netbsd::set_ipv6_address(
     close(sock);
 }
 
-void c_tun_device_netbsd::set_mtu(
-    uint32_t mtu
-) {
-    pfp_dbg1n("Prolog at " << __func__);
+void c_tun_device_bsd::set_mtu(uint32_t mtu) {
     int sock;
     struct ifreq interface;
-    
     memset(&interface, 0, sizeof(struct ifreq));
-    
     pfp_goal("Create socket ...");
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_RAW);
     if(sock == -1) {
         pfp_warnn(__func__);
         throw std::runtime_error(std::string("Socket create problem"));
     }
-    
     strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
+    #if defined(ANTINET_netbsd)
     interface.ifr_ifru.ifru_mtu = mtu;
-    
+    #endif
+    #if defined(ANTINET_openbsd)
+    interface.ifr_ifru.ifru_metric = mtu;
+    #endif
     pfp_goal("Setting MTU on " << IFNAME << " to " << mtu);
     if(ioctl(sock, SIOCSIFMTU, &interface) == -1) {
 	pfp_erron("SIOCSIFMTU");
     }
-    
     close(sock);
 }
-
-bool c_tun_device_netbsd::incomming_message_form_tun() 
-{
-    pfp_dbg1n("Prolog at " << __func__);
-    m_ioservice.run_one(); // <--- will call ASIO handler if there is any new data
+    
+bool c_tun_device_bsd::incomming_message_form_tun() {
+    m_ioservice.run_one();
     if (m_readed_bytes > 0) {
-        pfp_dbg1n("At "<<__func__<<": we have "<<m_readed_bytes<<" bytes");
-        return true;
-    } else 
-        return false;
+	pfp_dbg1n("At " << __func__ << ": we have " << m_readed_bytes << " bytes");
+	return true;
+    } else {
+	return false;
+    }
 }
 
-size_t c_tun_device_netbsd::read_from_tun(
-    void *buf, 
-    size_t count
-) {
-    pfp_dbg1n("Prolog at " << __func__);
+size_t c_tun_device_bsd::read_from_tun(void *buf, size_t count) {
     memset(buf, 0, count);
     int rret = read_tun(m_tun_fd, buf, count);
-    if(rret < 0) {
-        perror("read_tun");
+    if (rret < 0) {
+	perror("read_tun");
     } else {
-        pfp_goal("Read from " IFNAME);
-        return rret;
+	pfp_goal("Read from " IFNAME);
+	return rret;
     }
     return 0;
 }
 
-size_t c_tun_device_netbsd::write_to_tun(
-    void *buf, 
-    size_t count
-) {
-    pfp_dbg1n("Prolog at " << __func__);
+size_t c_tun_device_bsd::write_to_tun(void *buf, size_t count) {
     int wret = write_tun(m_tun_fd, buf, count);
     if(wret < 0) {
         perror("write_tun");
@@ -910,12 +911,7 @@ size_t c_tun_device_netbsd::write_to_tun(
     return 0;
 }
 
-int c_tun_device_netbsd::get_tun_fd() const {
-    pfp_dbg1n("Prolog at " << __func__);
-    return m_tun_fd;
-}
-
-int c_tun_device_netbsd::netbsd_modify_read_write_return(uint32_t len) {
+int c_tun_device_bsd::netbsd_modify_read_write_return(uint32_t len) {
     if (len > 0) {
 	return len > sizeof(uint32_t) ? len - sizeof(uint32_t) : 0;
     } else {
@@ -923,7 +919,7 @@ int c_tun_device_netbsd::netbsd_modify_read_write_return(uint32_t len) {
     }
 }
 
-int c_tun_device_netbsd::write_tun(int tun0, void *buf, int len) {
+int c_tun_device_bsd::write_tun(int tun0, void *buf, int len) {
     u_int32_t type;
     struct iovec iv[2];
 
@@ -937,7 +933,7 @@ int c_tun_device_netbsd::write_tun(int tun0, void *buf, int len) {
     return netbsd_modify_read_write_return(writev(tun0, iv, 2));
 }
 
-int c_tun_device_netbsd::read_tun(int tun0, void *buf, int len) {
+int c_tun_device_bsd::read_tun(int tun0, void *buf, int len) {
     u_int32_t type;
     struct iovec iv[2];
 
@@ -949,7 +945,7 @@ int c_tun_device_netbsd::read_tun(int tun0, void *buf, int len) {
     return netbsd_modify_read_write_return(readv(tun0, iv, 2));
 }
 
-int c_tun_device_netbsd::ipv6_mask(struct in6_addr *mask, int len) {
+int c_tun_device_bsd::ipv6_mask(struct in6_addr *mask, int len) {
     // /netbsd-current/external/bsd/dhcpcd/dist/src/ipv6.c
     #define NBBY 8
     const unsigned char masks[NBBY] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
@@ -972,6 +968,10 @@ int c_tun_device_netbsd::ipv6_mask(struct in6_addr *mask, int len) {
 	mask->s6_addr[bytes] = masks[bits - 1];
     }
     return 0;
+}
+
+int c_tun_device_bsd::get_tun_fd() const {
+    return m_tun_fd;
 }
 #endif
 

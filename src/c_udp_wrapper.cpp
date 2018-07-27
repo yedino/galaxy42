@@ -7,7 +7,6 @@ c_udp_wrapper::c_udp_wrapper()
 	: m_disabled(false)
 { }
 
-
 #if defined(__linux__)
 c_udp_wrapper_linux::c_udp_wrapper_linux(const int listen_port)
 :
@@ -127,11 +126,10 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 	m_socket.async_receive_from(boost::asio::buffer(m_buffer), m_sender_endpoint,
 			boost::bind(&c_udp_wrapper_asio::read_handle, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
-
 #endif
 
-#if defined(ANTINET_netbsd)
-c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+c_udp_wrapper_bsd::c_udp_wrapper_bsd(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
 {
@@ -155,6 +153,8 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
 		pfp_note("Binding 6");
 		bind_result = bind(m_socket, reinterpret_cast<sockaddr*>(&addr6), sizeof(addr6));  // reinterpret allowed by Linux specs
 	}
+	
+	#if defined(ANTINET_netbsd)
         struct ifreq ifr;
         memset (&ifr, 0, sizeof (ifr));
         snprintf (ifr.ifr_name, sizeof (ifr.ifr_name), "%s", IFNAME);
@@ -166,6 +166,8 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
         } else {
             pfp_dbg5n("SIOCGIFINDEX : " << ifr.ifr_ifindex);
         }
+	#endif
+	
         if(bind_result == -1) {
             std::stringstream errorstring;
             errorstring<<"ERRNO = "<<strerror(errno)<<" , Some possible solutions: ";
@@ -179,11 +181,12 @@ c_udp_wrapper_netbsd::c_udp_wrapper_netbsd(const int listen_port)
             pfp_warnn(errorstring.str());
             pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         }
+	
 	assert( bind_result >= 0 ); // TODO change to except
 	assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
 }
 
-void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
+void c_udp_wrapper_bsd::send_data(const c_ip46_addr &dst_address, const void *data, size_t size_of_data) {
 	if (m_disabled) { pfp_dbg4n("disabled socket"); return; }
 	auto dst_ip4 = dst_address.get_ip4(); // ip of proper type, as local variable
 	ssize_t sto = sendto(m_socket, data, size_of_data, 0, reinterpret_cast<sockaddr*>(&dst_ip4), sizeof(sockaddr_in));
@@ -200,7 +203,7 @@ void c_udp_wrapper_netbsd::send_data(const c_ip46_addr &dst_address, const void 
         }
 }
 
-size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
+size_t c_udp_wrapper_bsd::receive_data(void *data_buf, const size_t data_buf_size, c_ip46_addr &from_address) {
 	if (m_disabled) { pfp_dbg4n("disabled socket"); return 0; }
 	sockaddr_in6 from_addr_raw; // peering address of peer (socket sender), raw format
 	socklen_t from_addr_raw_size = sizeof(from_addr_raw); // ^ size of it
@@ -229,7 +232,7 @@ size_t c_udp_wrapper_netbsd::receive_data(void *data_buf, const size_t data_buf_
 	return size_read;
 }
 
-int c_udp_wrapper_netbsd::get_socket() {
+int c_udp_wrapper_bsd::get_socket() {
 	if (m_disabled) { pfp_dbg4n("disabled socket"); return 0 ; }
 	return m_socket;
 }
