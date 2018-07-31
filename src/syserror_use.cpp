@@ -55,14 +55,17 @@ std::string errno_to_string(int errno_copy) {
 
 		buf[buflen-1]=0; // guarantee string terminates
 		std::string ret(buf);
-	#elif defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+		return ret;
+	#endif
+
+	#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
                 strerror_r(errno_copy, buf, buflen);
                 buf[buflen-1]=0;
                 std::string ret(buf);
 		return ret;
 	#endif
 
-	#if defined(ANTINET_linux) || defined(ANTINET_macosx)
+	#if defined(ANTINET_linux)
 		// char *strerror_r(int errnum, char *buf, size_t buflen);  /* GNU-specific */
 		char * result = strerror_r(errno_copy, buf, buflen);
 		// result can point to our buf, or to some other (and immutable) string
