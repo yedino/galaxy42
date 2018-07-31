@@ -9,21 +9,24 @@ set -o nounset
 function fail() { echo "Error: $@" ; exit 1; }
 
 readonly config_global="/etc/iplab2/global.sh" # <--- runs [as root] script ! must be read-only secure location
-source "$config_global" || fail "Failed to run global config script [$config_global]"
+source "$config_global" || fail "Failed to run global config script [$config_global] - read my source code for instructions how to create it"
 
-# ^--- put there data that describes your computer/test-LAN, copy/paste, uncomment all lines except 1st, and edit:
-#/bin/bash
+# Installation:
+# ^--- create directory and file as above and put there collowing few lines (uncomment all lines except 1st) and edit this settings to your computer
+#!/bin/bash
 # readonly ipBlock="10"
 # readonly ipNetmask="24"
 # readonly ipVarDir="/var/local/iplab2/"
 # # this computer:
-# readonly ipMyBase=4
-# declare -a ipCARD=("enp1s0f0" "enp1s0f1")
+# readonly ipMyBase=4 # <--- put here base-number of current computer
+# declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3...
 # ---
 
 function help_usage() {
 	echo ""
-	echo "Script to quickly configure your test NICs to connect to other computers/NICs in up to 9x9 test lab network."
+	echo "Script to quickly configure your test NICs to connect to other computers/NICs in up to 9 computer x 9 cards test lab network."
+	echo "Choose a base number 1..9 for each of your computers. Then install (configure) this script on each computer"
+	echo "Wehn you run this script on each computer, telling it the connections from given one computer to others, then all cards on all computers end up with properly configured IPs and networks"
 	echo ""
 	echo "Setup:"
 	echo "Create file like /etc/iplab2/global.sh (see this script for exact path and copy/paste template of config)"
@@ -34,8 +37,9 @@ function help_usage() {
 	echo 'connect is: "my_nic world target_base:target_nic"'
 	echo 'connect "2 100 4:9" means: my 2-nd card, in normal world (100) goes to 4-th computer into his 9-th card'
 	echo 'connect "3 101 4:8" means: my 3-rd card, in extra  world (101) goes to 4-th computer into his 8-th card'
-	echo "world should be 100, but use 101 etc if more then one connection from you to SAME target computer (to allow route selection)"
-	echo "all computer numbers, and card numbers, should be 1..9 ."
+	echo "  my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
+	echo "  target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
+	echo "  world should be 100, but use 101 etc if more then one connection from you to SAME target computer (to allow route selection)"
 	echo "program -h or --help shows help"
 	echo ""
 }
