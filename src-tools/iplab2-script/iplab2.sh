@@ -3,10 +3,10 @@
 # Warning: Quick code for tests, might be insecure !!!
 # See help_usage() or run --help for information and purpose of this script.
 
-set -o errexit
-set -o nounset
+# set -o errexit
+# set -o nounset
 
-function fail() { echo "Error: $@" ; exit 1; }
+function fail() { echo "Error: $*" ; exit 1; }
 
 function help_usage() {
 	echo ""
@@ -20,10 +20,10 @@ function help_usage() {
 	echo "Alice(6):1 --- Bob(7):2 will get IPs: 10.67.12.61 --- 10.67.12.72"
 	echo "Alice(6):2 --- Bob(7):1 will get IPs: 10.67.21.62 --- 10.67.21.71"
 	echo "For information, script assigns IP by following rules:"
-	echo "looking at example 10.67.21.62, each segment of this IP is calculated as:"
+	echo "looking at example 10.67.21.62 above, each segment of this IP is calculated as:"
 	echo "  10. is always the prefix"
-	echo " .67. TODO (world for now) XXX is made from base number of the two computers, first digit is the smaller number (6<7) as digit, then the other"
-	echo " .21. is made from card numbers on both sides, first digits is CARD NUMBER (2) from computer with smaller BASE number (6<7 therefore take 2), then the other"
+	echo " .67. is made from base numbers of the two computers, first digit is the smaller number (6<7) as digit, then the other"
+	echo " .21. is made from CARD numbers on both sides, first digits is CARD NUMBER (2) from computer with smaller BASE number (6<7 therefore take 2), then the other"
 	echo " .62  is made from this computer IP number as first digit, then it's card number. (and for remote IP it's remote's base and then it's card number)"
 	echo ""
 	echo "Setup:"
@@ -32,12 +32,11 @@ function help_usage() {
 	echo "Usage:"
 	echo 'program "1 100 3:1" "2 100 4:1" "3 101 4:9"'
 	echo 'program "connect1" "connect2" "connect3" ...'
-	echo 'connect is: "my_nic world target_base:target_nic"'
-	echo 'connect "2 100 4:9" means: my 2-nd card, in normal world (100) goes to 4-th computer into his 9-th card'
-	echo 'connect "3 101 4:8" means: my 3-rd card, in extra  world (101) goes to 4-th computer into his 8-th card'
+	echo 'connect is: "my_nic target_base:target_nic"'
+	echo 'connect "2 4:9" means: my 2-nd card, goes to 4-th computer into his 9-th card'
+	echo 'connect "3 4:8" means: my 3-rd card, goes to 4-th computer into his 8-th card'
 	echo "  my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
 	echo "  target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
-	echo "  world should be 100, but use 101 etc if more then one connection from you to SAME target computer (to allow route selection)"
 	echo "program -h or --help shows help"
 	echo ""
 }
@@ -92,33 +91,37 @@ do
 done
 chmod a+rX "${ipVarDir}/"
 
+conn_ix=0
 for target in "${ipTARGET[@]}"
 do
+	echo "Parsing connection command [$target]"
 	target2=$( echo "$target" | sed -e's/:/ /g')
-	read my_nicnr our_world target_base target_nicnr <<< "$target2" || fail "Parse error in $[target]"
-	[[ "$my_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in $[target] ($my_nicnr) my_nicnr"
-	[[ "$our_world" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in $[target] ($our_world) our_world"
-	[[ "$target_base" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in $[target] ($target_base) target_base"
-	[[ "$target_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in $[target] ($target_nicnr) target_nicnr"
+	read my_nicnr target_base target_nicnr <<< "$target2" || fail "Parse error in $[target]"
+	[[ "$my_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target] ($my_nicnr) my_nicnr"
+	[[ "$target_base" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target] ($target_base) target_base"
+	[[ "$target_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target]  ($target_nicnr) target_nicnr"
 
 	[[ "$my_nicnr" -gt 9 ]] && fail "Too big my_nicnr ($my_nicnr)"
-	[[ "$our_world" -gt 220 ]] && fail "Too big our_world ($our_world)"
 	[[ "$target_base" -gt 9 ]] && fail "Too big target_base ($target_base)"
 	[[ "$target_nicnr" -gt 9 ]] && fail "Too big target_nicnr ($target_nicnr)"
 
-	# if I am base 4, and target is 7 then our common net is .74. sorted, so .47.
-	c1="$ipMyBase"
-	c2="$target_base"
-	[[ "$c1" -gt "$c2" ]] && { tmp="$c1" ; c1="$c2" ; c2="$tmp"; }
-	[[ "$c1" == "$c2" ]] && fail "Trying to connect to yourself? You are base ipMyBase=$ipMyBase , target base = $target_base"
-	commonNet="$c1$c2"
+	# b1 and b2: if I am base 4, and target is 7 then our common net is .74. sorted, so .47.
+	# this assumes that b1<b2, then build net b1.b2 and subnet c1.c2
+	b1="$ipMyBase" ; b2="$target_base"
+	n1="$my_nicnr" ; n2="$target_nicnr"
+	[[ "$b1" -gt "$b2" ]] && { # but if b1>b2 then reverse it:
+		tmp="$b1" ; b1="$b2" ; b2="$tmp";
+		tmp="$n1" ; n1="$n2" ; n2="$tmp";
+	}
+	[[ "$b1" == "$b2" ]] && fail "Trying to connect to yourself? You are base ipMyBase=$ipMyBase , target base = $target_base"
+	baseNet="$b1$b2"
+	nicSubnet="$n1$n2"
 
 	my_endip=$(( ipMyBase*10 + my_nicnr ))
 	target_endip=$(( target_base*10 + target_nicnr ))
 
-	# echo "Will connect to computer base=$target_base to his nic_nr=$target_nicnr, common net=.${commonNet}."
-	my_ip="${ipBlock}.${our_world}.${commonNet}.${my_endip}"
-	target_ip="${ipBlock}.${our_world}.${commonNet}.${target_endip}"
+	my_ip="${ipBlock}.${baseNet}.${nicSubnet}.${my_endip}"
+	target_ip="${ipBlock}.${baseNet}.${nicSubnet}.${target_endip}"
 
 	my_eth="${ipCARD[my_nicnr-1]}"
 	echo "My $my_ip (:$my_nicnr=$my_eth) ---to----> his $target_ip (:$target_nicnr)"
@@ -133,7 +136,9 @@ do
 	ping -w 1 -W 1 -c 1 "$target_ip" > /dev/null && echo "^--- PING OK ($target_ip)"
 	echo ""
 
-	echo "${target_ip}" > "${ipVarDir}/ip-${my_nicnr}.txt"
+	conn_ix=$(( conn_ix+1 ))
+	echo "${target_ip}" > "${ipVarDir}/ip-nic-${my_nicnr}.txt"
+	echo "${target_ip}" > "${ipVarDir}/ip-conn-${conn_ix}.txt"
 done
 
 echo ""
