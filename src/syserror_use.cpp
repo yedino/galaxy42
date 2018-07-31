@@ -62,7 +62,7 @@ std::string errno_to_string(int errno_copy) {
 		return ret;
 	#endif
 
-	#if defined(__linux__)
+	#if defined(ANTINET_linux) || defined(ANTINET_macosx)
 		// char *strerror_r(int errnum, char *buf, size_t buflen);  /* GNU-specific */
 		char * result = strerror_r(errno_copy, buf, buflen);
 		// result can point to our buf, or to some other (and immutable) string
