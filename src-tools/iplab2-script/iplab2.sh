@@ -1,32 +1,30 @@
 #!/bin/bash
 # iplab2 - Copyrighted (C) 2018 rfree ; BSD 2-clause licence
-# Quick code, might be insecure
-# See help_usage() for information
+# Warning: Quick code for tests, might be insecure !!!
+# See help_usage() or run --help for information and purpose of this script.
 
 set -o errexit
 set -o nounset
 
 function fail() { echo "Error: $@" ; exit 1; }
 
-readonly config_global="/etc/iplab2/global.sh" # <--- runs [as root] script ! must be read-only secure location
-source "$config_global" || fail "Failed to run global config script [$config_global] - read my source code for instructions how to create it"
-
-# Installation:
-# ^--- create directory and file as above and put there collowing few lines (uncomment all lines except 1st) and edit this settings to your computer
-#!/bin/bash
-# readonly ipBlock="10"
-# readonly ipNetmask="24"
-# readonly ipVarDir="/var/local/iplab2/"
-# # this computer:
-# readonly ipMyBase=4 # <--- put here base-number of current computer
-# declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3...
-# ---
-
 function help_usage() {
 	echo ""
 	echo "Script to quickly configure your test NICs to connect to other computers/NICs in up to 9 computer x 9 cards test lab network."
 	echo "Choose a base number 1..9 for each of your computers. Then install (configure) this script on each computer"
-	echo "Wehn you run this script on each computer, telling it the connections from given one computer to others, then all cards on all computers end up with properly configured IPs and networks"
+	echo "When you run this script on each computer, telling it the connections from given one computer to others, then all cards on all computers end up with properly configured IPs and networks"
+	echo ""
+	echo "Script assigns IPs to cards. All cards are point-to-point connections from one computer to another."
+	echo "Computers: Alice(6) Bob(7)"
+	echo "Alice(6):1 --- Bob(7):2 (Computer alice base number 6 connects her card 1 into computer Bob base number 7 his card 2)"
+	echo "Alice(6):1 --- Bob(7):2 will get IPs: 10.67.12.61 --- 10.67.12.72"
+	echo "Alice(6):2 --- Bob(7):1 will get IPs: 10.67.21.62 --- 10.67.21.71"
+	echo "For information, script assigns IP by following rules:"
+	echo "looking at example 10.67.21.62, each segment of this IP is calculated as:"
+	echo "  10. is always the prefix"
+	echo " .67. TODO (world for now) XXX is made from base number of the two computers, first digit is the smaller number (6<7) as digit, then the other"
+	echo " .21. is made from card numbers on both sides, first digits is CARD NUMBER (2) from computer with smaller BASE number (6<7 therefore take 2), then the other"
+	echo " .62  is made from this computer IP number as first digit, then it's card number. (and for remote IP it's remote's base and then it's card number)"
 	echo ""
 	echo "Setup:"
 	echo "Create file like /etc/iplab2/global.sh (see this script for exact path and copy/paste template of config)"
@@ -43,12 +41,28 @@ function help_usage() {
 	echo "program -h or --help shows help"
 	echo ""
 }
-
-ipTARGET=( "$@" )
-
 [[ -z "$*" ]] && { help_usage ; exit 40 ; }
 [[ "$1" == "-h" ]] && { help_usage ; exit 40 ; }
 [[ "$1" == "--help" ]] && { help_usage ; exit 40 ; }
+
+readonly config_global="/etc/iplab2/global.sh" # <--- runs [as root] script ! must be read-only secure location
+source "$config_global" || fail "Failed to run global config script [$config_global] - read my source code for instructions how to create it; Run me with --help to read instructions."
+
+# Installation:
+# ^--- create directory and file as above and put there collowing few lines (uncomment all lines except 1st) and edit this settings to your computer
+#!/bin/bash
+# readonly ipBlock="10"
+# readonly ipNetmask="24"
+# readonly ipVarDir="/var/local/iplab2/"
+# # this computer:
+# readonly ipMyBase=4 # <--- put here base-number of current computer
+# declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3...
+# ---
+
+# // -------------------------------------------------------------------
+
+ipTARGET=( "$@" )
+
 
 echo "---------------------"
 echo "Your cards (configured in $config_global)"
@@ -58,6 +72,7 @@ do
 	dev=${ipCARD[ix-1]} # -1 to move to 0-based bash array indexes
 	echo "Your cardnr :$ix is $dev"
 	ix=$((ix+1))
+	ip address flush dev ${dev}
 done
 echo "---------------------"
 echo
