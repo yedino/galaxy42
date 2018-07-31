@@ -151,6 +151,13 @@ do
 	cat "${ifile}"
 done
 
+echo
+echo "You can now run commands that pick up the test IPs like this:"
+echo 'ping "$(< /var/local/iplab2/ip-conn-1.txt)"   # 1st connection from above'
+echo 'ping "$(< /var/local/iplab2/ip-conn-2.txt)"   # 2nd connection from above (if you have it)'
+echo 'ping "$(< /var/local/iplab2/ip-nic-1.txt)"   # using 1st of your NIC cards as configured here, no matter what connection'
+echo "etc..."
+
 
 echo "Done"
 
