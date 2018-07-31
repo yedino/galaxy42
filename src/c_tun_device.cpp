@@ -947,8 +947,8 @@ int c_tun_device_bsd::read_tun(int tun0, void *buf, int len) {
 
 int c_tun_device_bsd::ipv6_mask(struct in6_addr *mask, int len) {
     // /netbsd-current/external/bsd/dhcpcd/dist/src/ipv6.c
-    #define NBBY 8
-    const unsigned char masks[NBBY] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
+    #define NR_MASKS 8
+    const unsigned char masks[NR_MASKS] = { 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, 0xff };
     int bytes, bits, i;
 
     if (len < 0 || len > 128) {
@@ -957,8 +957,8 @@ int c_tun_device_bsd::ipv6_mask(struct in6_addr *mask, int len) {
    }
 
     memset(mask, 0, sizeof(*mask));
-    bytes = len / NBBY;
-    bits = len % NBBY;
+    bytes = len / NR_MASKS;
+    bits = len % NR_MASKS;
     for (i = 0; i < bytes; i++)
 	mask->s6_addr[i] = 0xff;
     if (bits) {
