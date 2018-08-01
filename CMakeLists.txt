@@ -207,6 +207,10 @@ endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fdiagnostics-color=always")
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
+		message(STATUS "Possible compilation fault on OpenBSD, add -ftrack-macro-expansion=0 flag to CXX_FLAGS")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=0")
+	endif()
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
