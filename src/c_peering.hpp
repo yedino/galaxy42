@@ -75,7 +75,7 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 		c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_asio &udp_wrapper);
                 #endif
-                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
                 c_peering_udp(const t_peering_reference & ref, c_udp_wrapper_bsd &udp_wrapper);
 		#endif
 
@@ -92,7 +92,7 @@ class c_peering_udp : public c_peering { ///< An established connection to UDP p
 		#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__) // (multiplatform boost::asio)
 		std::reference_wrapper<c_udp_wrapper_asio> m_udp_wrapper; // TODO: sahred_ptr ?
                 #endif
-                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
                 std::reference_wrapper<c_udp_wrapper_bsd> m_udp_wrapper;
                 #endif
 };

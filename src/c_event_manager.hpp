@@ -76,7 +76,7 @@ class c_event_manager_asio final : public c_event_manager {
 };
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 class c_tun_device_bsd;
 class c_udp_wrapper_bsd;
 

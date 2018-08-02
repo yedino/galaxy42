@@ -875,7 +875,7 @@ std::pair<c_haship_addr,c_haship_addr> c_tunserver::parse_tun_ip_src_dst(const c
 // __win32 || __cygwin__ || __mach__ (multiplatform boost::asio)
 #endif
 	
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 	using namespace boost::asio;
 	ip::address_v6::bytes_type ip_bytes;
 	std::copy_n(buff + pos_src, ip_bytes.size(), ip_bytes.begin());

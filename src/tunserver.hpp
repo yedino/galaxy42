@@ -297,7 +297,7 @@ class c_tunserver : public c_galaxy_node {
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
                 #endif
-                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
                 c_tun_device_bsd m_tun_device;
                 c_udp_wrapper_bsd m_udp_device;
                 c_event_manager_bsd m_event_manager;

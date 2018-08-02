@@ -47,7 +47,7 @@ class c_tun_device {
 
 };
 
-#if defined(__FreeBSD__)
+#if defined(false)
 class c_tun_device_freebsd final : public c_tun_device {
 	public:
                 friend class c_event_manager_linux; // for io_service etc?
@@ -66,7 +66,7 @@ class c_tun_device_freebsd final : public c_tun_device {
 }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 class c_tun_device_bsd final : public c_tun_device {
         using stream_type = boost::asio::posix::stream_descriptor;
 	public:

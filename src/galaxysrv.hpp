@@ -53,6 +53,9 @@
 #if defined(ANTINET_openbsd)
 #include "tuntap/openbsd/c_tuntap_openbsd_obj.hpp"
 #endif
+#if defined(ANTINET_freebsd)
+#include "tuntap/freebsd/c_tuntap_freebsd_obj.hpp"
+#endif
 
 #include "netbuf.hpp"
 
@@ -119,6 +122,9 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
                 #endif
                 #if defined(ANTINET_openbsd)
                         c_tuntap_openbsd_obj m_tuntap;
+                #endif
+                #if defined(ANTINET_freebsd)
+                        c_tuntap_freebsd_obj m_tuntap;
                 #endif
                 #if defined(EMPTY)
 			#error "This platform is not supported"

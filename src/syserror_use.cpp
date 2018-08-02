@@ -58,7 +58,7 @@ std::string errno_to_string(int errno_copy) {
 		return ret;
 	#endif
 
-	#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+	#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
                 strerror_r(errno_copy, buf, buflen);
                 buf[buflen-1]=0;
                 std::string ret(buf);

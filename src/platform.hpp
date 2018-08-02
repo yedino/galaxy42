@@ -67,6 +67,13 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
         #undef EMPTY
 #endif
 
+#if defined(__FreeBSD__)
+        #define ANTINET_freebsd
+        #define IFNAME "tun0"
+        #define ATTR_NODISCARD __attribute__((warn_unused_result)) // XXX: ?
+        #undef EMPTY
+#endif
+
 // ===========================================================================================================
 #if ( ! defined( ANTINET_windows ))
 	// works on mac, linux

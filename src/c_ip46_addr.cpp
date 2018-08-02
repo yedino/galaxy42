@@ -252,7 +252,7 @@ void c_ip46_addr::set_port(int new_port) {
 }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 #include "cpputils.hpp"
 #include <netdb.h>
 

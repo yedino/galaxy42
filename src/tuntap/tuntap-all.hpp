@@ -17,3 +17,6 @@
 #if defined(ANTINET_openbsd)
 #include <tuntap/openbsd/c_tuntap_openbsd_obj.hpp>
 #endif
+#if defined(ANTINET_freebsd)
+#include <tuntap/freebsd/c_tuntap_freebsd_obj.hpp>
+#endif
