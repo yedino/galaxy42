@@ -17,8 +17,6 @@ endif()
 
 ########################### CMAKE MODULES ###########################
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
-include(cotire)
 
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
@@ -529,8 +527,20 @@ endif ()
 add_library(apigalaxy ${SOURCES_API_GALAXY})
 
 add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-if (NOT MSVC) #TODO
-	cotire(tunserver.elf)
+
+option(COTIRE "Enable COTIRE" OFF)
+if(COTIRE)
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+		#TODO: ^-- AND NOT MSVC ? | UNIX
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
+		include(cotire)
+		cotire(tunserver.elf)
+		message(STATUS "COTIRE enabled on Linux.")
+	else()
+		message(STATUS "COTIRE not available on '${CMAKE_SYSTEM_NAME}'")
+	endif()
+else()
+	message(STATUS "COTIRE disabled.")
 endif()
 
 set(LIBS_COMMON
