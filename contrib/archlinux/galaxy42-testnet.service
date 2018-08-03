@@ -1,0 +1,17 @@
+[Unit]
+Description=Galaxy42 meshnet node [testnet mode]
+Wants=network.target
+After=network.target
+
+[Service]
+ProtectHome=true
+ProtectSystem=true
+SyslogIdentifier=galaxy42
+EnvironmentFile=/etc/galaxy42-testnet.conf
+ExecStart=/usr/bin/tunserver.elf --q --set-prefix fd43 --port 9043 --rpc-port 42001 $GALAXY42T_ARGS
+Restart=always
+User=galaxy42
+Group=galaxy42
+
+[Install]
+WantedBy=multi-user.target
