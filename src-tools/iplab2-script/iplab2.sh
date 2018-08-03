@@ -1,6 +1,7 @@
 #!/bin/bash
 # iplab2 - Copyrighted (C) 2018 rfree ; BSD 2-clause licence
 # Warning: Quick code for tests, might be insecure !!!
+# This configures IPv4 numbers based on p2p9x9 configuration.
 # See help_usage() or run --help for information and purpose of this script.
 
 # set -o errexit
@@ -10,16 +11,22 @@ function fail() { echo "Error: $*" ; exit 1; }
 
 function help_usage() {
 	echo ""
-	echo "Script to quickly configure your test NICs to connect to other computers/NICs in up to 9 computer x 9 cards test lab network."
+	echo "Script to assign IPv4 addresses in format 'p2p9x9' - where up to 9 computers each with up to 9 cards are connected in pairs of poin-to-point connections."
 	echo "Choose a base number 1..9 for each of your computers. Then install (configure) this script on each computer"
 	echo "When you run this script on each computer, telling it the connections from given one computer to others, then all cards on all computers end up with properly configured IPs and networks"
 	echo ""
 	echo "Script assigns IPs to cards. All cards are point-to-point connections from one computer to another."
-	echo "Computers: Alice(6) Bob(7)"
+	echo "When cable connects computer A, card X -to- computer B, card Y - then:"
+	echo "if A<B then computer A gets IP 10.AB.XY.AX, computer B gets 10.AB.XY.BY"
+	echo "if A>B then computer A gets IP 10.BA.YX.AX, computer B gets 10.BA.YX.BY"
+	echo "A is always not equal to B, since computer base numbers are unique. X and Y could be the same (they are unique only between cards of given computer)."
+	echo "A,B,X,Y are 1..9. IPs like 10.1.*.* up to 10.11.*.*, and above 10.99.*.*, will never be configured by p2p9x9, leaving it free eg to setup VPN too"
+	echo ""
+	echo "For example: computers: Alice(6) Bob(7)"
 	echo "Alice(6):1 --- Bob(7):2 (Computer alice base number 6 connects her card 1 into computer Bob base number 7 his card 2)"
 	echo "Alice(6):1 --- Bob(7):2 will get IPs: 10.67.12.61 --- 10.67.12.72"
 	echo "Alice(6):2 --- Bob(7):1 will get IPs: 10.67.21.62 --- 10.67.21.71"
-	echo "For information, script assigns IP by following rules:"
+	echo "Script assigns IP by following rules:"
 	echo "looking at example 10.67.21.62 above, each segment of this IP is calculated as:"
 	echo "  10. is always the prefix"
 	echo " .67. is made from base numbers of the two computers, first digit is the smaller number (6<7) as digit, then the other"
