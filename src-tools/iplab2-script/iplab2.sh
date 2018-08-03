@@ -78,12 +78,13 @@ do
 	dev=${ipCARD[ix-1]} # -1 to move to 0-based bash array indexes
 	echo "Your cardnr :$ix is $dev"
 	ix=$((ix+1))
-	ip address flush dev ${dev}
+	ip address flush dev "${dev}" # action
 done
 echo "---------------------"
 echo
 
 [[ "$ipMyBase" -gt 9 ]] && fail "Too big ipMyBase ($ipMyBase)"
+[[ "$ipMyBase" -lt 1 ]] && fail "Too small ipMyBase ($ipMyBase)"
 [[ -z "$ipVarDir" ]] && fail "Configure ipVarDir."
 [[ "$ipVarDir" =~ ^/[a-zA-Z0-9/]{1,100}/iplab2/$ ]] || fail "Invalid configuration ipVarDir (regex)"
 
@@ -109,11 +110,14 @@ do
 	[[ "$target_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target]  ($target_nicnr) target_nicnr"
 
 	[[ "$my_nicnr" -gt 9 ]] && fail "Too big my_nicnr ($my_nicnr)"
+	[[ "$my_nicnr" -lt 1 ]] && fail "Too small my_nicnr ($my_nicnr)"
 	[[ "$target_base" -gt 9 ]] && fail "Too big target_base ($target_base)"
+	[[ "$target_base" -lt 1 ]] && fail "Too small target_base ($target_base)"
 	[[ "$target_nicnr" -gt 9 ]] && fail "Too big target_nicnr ($target_nicnr)"
+	[[ "$target_nicnr" -lt 1 ]] && fail "Too small target_nicnr ($target_nicnr)"
 
 	# b1 and b2: if I am base 4, and target is 7 then our common net is .74. sorted, so .47.
-	# this assumes that b1<b2, then build net b1.b2 and subnet c1.c2
+	# this assumes that b1<b2, then build net b1.b2 and subnet n1.n2
 	b1="$ipMyBase" ; b2="$target_base"
 	n1="$my_nicnr" ; n2="$target_nicnr"
 	[[ "$b1" -gt "$b2" ]] && { # but if b1>b2 then reverse it:
@@ -134,10 +138,10 @@ do
 	echo "My $my_ip (:$my_nicnr=$my_eth) ---to----> his $target_ip (:$target_nicnr)"
 
 	#set -x
-	ip address flush dev ${my_eth}
-	ip link set dev ${my_eth} up
-	ip addr add "${my_ip}/${ipNetmask}" dev "$my_eth"
-	ifconfig "${my_eth}" mtu 9000
+	ip address flush dev "${my_eth}" # action
+	ip link set dev "${my_eth}" up # action
+	ip addr add "${my_ip}/${ipNetmask}" dev "$my_eth" # action
+	ifconfig "${my_eth}" mtu 9000 # action
 	#set +x
 
 	ping -w 1 -W 1 -c 1 "$target_ip" > /dev/null && echo "^--- PING OK ($target_ip)"
