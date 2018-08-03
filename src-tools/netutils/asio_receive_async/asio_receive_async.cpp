@@ -15,9 +15,10 @@ using boost::asio::ip::udp;
 using t_counter = uint64_t;
 
 constexpr size_t max_length = 65535;
+constexpr size_t max_threads = 8192;
 size_t threads_count = 1;
 
-std::array< char[max_length] , 20 > data;
+std::array< char[max_length] , max_threads > data;
 
 using buf_type = decltype(boost::asio::buffer(data[0], max_length));
 std::vector<buf_type> buffers;
@@ -108,7 +109,7 @@ int main(int argc, char* argv[])
 		}
 
 		threads_count = std::stoi(argv[2]);
-		if (threads_count > 20)
+		if (threads_count > max_threads)
 		{
 			std::cerr << "Usage: server <port> <number of threads>\n";
 			return 1;
