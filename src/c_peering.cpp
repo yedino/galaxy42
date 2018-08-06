@@ -108,7 +108,7 @@ c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_asio 
 { }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 c_peering_udp::c_peering_udp(const t_peering_reference &ref, c_udp_wrapper_bsd &udp_wrapper)
 :
 	c_peering(ref),

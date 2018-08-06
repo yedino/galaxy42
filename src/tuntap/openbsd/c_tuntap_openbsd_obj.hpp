@@ -4,6 +4,7 @@
 #include "platform.hpp"
 
 #if defined(ANTINET_openbsd)
+
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 

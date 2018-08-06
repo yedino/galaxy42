@@ -10,12 +10,30 @@
 #include <cstring>
 
 #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+// TODO: clean
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/if_tun.h>
 #include <netinet6/in6_var.h>
 #include <netinet6/nd6.h>
 #include <stdexcept>
+#endif
+
+#if defined(ANTINET_freebsd)
+// TODO: clean
+struct prf_ra {
+    u_char onlink : 1;
+    u_char autonomous : 1;
+    u_char reserved : 6;
+} prf_ra;
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <net/if_tun.h>
+#include <net/if_var.h>
+#include <netinet/in_var.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/nd6.h>
 #endif
 
 // for NetPlatform utils - temporary solution
@@ -671,7 +689,7 @@ size_t c_tun_device_apple::write_to_tun(void *buf, size_t count) {
 }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 c_tun_device_bsd::c_tun_device_bsd() :
 	m_ioservice(),
 	m_tun_stream(m_ioservice, m_tun_fd)
@@ -749,7 +767,7 @@ void c_tun_device_bsd::init()
 {
     pfp_dbg1n("Prolog at " << __func__);
     
-    #if defined(ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_freebsd)
     int i;
     
     i = IFF_POINTOPOINT|IFF_MULTICAST;
@@ -865,7 +883,7 @@ void c_tun_device_bsd::set_mtu(uint32_t mtu) {
         throw std::runtime_error(std::string("Socket create problem"));
     }
     strncpy(interface.ifr_name, IFNAME, sizeof(interface.ifr_name));
-    #if defined(ANTINET_netbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_freebsd)
     interface.ifr_ifru.ifru_mtu = mtu;
     #endif
     #if defined(ANTINET_openbsd)

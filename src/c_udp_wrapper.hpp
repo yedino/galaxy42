@@ -61,7 +61,7 @@ class c_udp_wrapper_asio final : public c_udp_wrapper {
 };
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 class c_udp_wrapper_bsd final : public c_udp_wrapper {
 	friend class c_event_manager_bsd;
 	public:

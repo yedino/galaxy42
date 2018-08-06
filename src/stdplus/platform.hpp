@@ -32,6 +32,10 @@
         #define stdplus_platform_openbsd
 #endif
 
+#if defined(ANTINET_freebsd)
+        #define stdplus_platform_freebsd
+#endif
+
 #if defined(EMPTY)
 	#error Platform is not supported
 #endif

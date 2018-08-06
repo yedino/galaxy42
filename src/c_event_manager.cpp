@@ -105,7 +105,7 @@ bool c_event_manager_asio::get_tun_packet() {
 }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 c_event_manager_bsd::c_event_manager_bsd(const c_tun_device_bsd &tun_device, const c_udp_wrapper_bsd &udp_wrapper)
 :
 	m_tun_device(tun_device),

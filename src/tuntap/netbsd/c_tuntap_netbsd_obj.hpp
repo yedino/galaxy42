@@ -1,8 +1,10 @@
 #ifndef C_TUNTAP_NETBSD_OBJ_HPP
 #define C_TUNTAP_NETBSD_OBJ_HPP
 
-#if defined(ANTINET_netbsd)
 #include "platform.hpp"
+
+#if defined(ANTINET_netbsd)
+
 #include <boost/asio.hpp>
 #include <libs0.hpp>
 

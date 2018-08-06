@@ -1443,6 +1443,9 @@ void asiotest_udpserv(std::vector<std::string> options) {
 #if defined (ANTINET_openbsd)
                 tuntap = std::make_unique<c_tuntap_openbsd_obj>(*ios_tuntap.at(0));
 #endif
+#if defined (ANTINET_freebsd)
+                tuntap = std::make_unique<c_tuntap_freebsd_obj>(*ios_tuntap.at(0));
+#endif
 		std::array<unsigned char, IPV6_LEN> tuntap_address;
 		tuntap_address.fill(0x11);
 		tuntap_address.at(0) = 0xfd;

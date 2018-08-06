@@ -128,7 +128,7 @@ void c_udp_wrapper_asio::read_handle(const boost::system::error_code& error, siz
 }
 #endif
 
-#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd)
+#if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
 c_udp_wrapper_bsd::c_udp_wrapper_bsd(const int listen_port)
 :
 	m_socket(socket(AF_INET, SOCK_DGRAM, 0))
