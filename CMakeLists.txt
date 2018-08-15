@@ -445,12 +445,14 @@ file(GLOB SOURCES_GROUP_TUNSERVER
     src/cable/simulation/* 
     src/cable/udp/*
     src/cable/shm/cable_shm_addr.cpp 
-    src/tuntap/base/* src/tuntap/linux/* 
+    src/tuntap/base/*
+    src/tuntap/linux/* 
     src/tuntap/windows/* 
     src/tuntap/macosx/* 
     src/tuntap/fake_tun/* 
     src/tuntap/netbsd/* 
     src/tuntap/openbsd/* 
+    src/tuntap/freebsd/* 
     src/test/special_behaviour/*
 )
 

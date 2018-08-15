@@ -767,7 +767,7 @@ void c_tun_device_bsd::init()
 {
     pfp_dbg1n("Prolog at " << __func__);
     
-#if defined(ANTINET_netbsd) || defined(ANTINET_freebsd)
+    #if defined(ANTINET_netbsd)
     int i;
     
     i = IFF_POINTOPOINT|IFF_MULTICAST;
@@ -792,6 +792,26 @@ void c_tun_device_bsd::init()
         pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFHEAD problem") );
     } else {
         pfp_goal("Set flags: TUNSIFHEAD : " << i);
+    }
+    #endif
+    
+    #if defined(ANTINET_freebsd)
+    // from cjdns
+    int i;
+    
+    i = 1;
+    /* multi-af mode on */
+    if(ioctl(m_tun_fd, TUNSIFHEAD, &i) == -1) {
+        pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFHEAD problem") );
+    } else {
+        pfp_goal("Set flags: TUNSIFHEAD : " << i);
+    }
+    
+    i = IFF_BROADCAST;
+    if(ioctl(m_tun_fd, TUNSIFMODE, &i) == -1) {
+        pfp_throw_error_sub( tuntap_error_devtun , std::string("ioctl TUNSIFMODE problem") );
+    } else {
+        pfp_goal("Set flags: TUNSIFMODE : " << i);
     }
     #endif
     
