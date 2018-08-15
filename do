@@ -81,6 +81,21 @@ function platform_recognize_simple {
 		hash greadlink || fail "Can not find/user program greadlink, please instll it (e.g. from brew)"
 		shopt -s expand_aliases
 		alias readlink="greadlink"
+	elif [[ -n $(uname -a | grep "BSD") ]]
+	then
+		bsdplatform="$(uname | tr '[A-Z]' '[a-z]')"
+		if [[ "${bsdplatform}" == "netbsd" ]]
+		then
+			platform="NetBSD"
+		fi
+		if [[  "${bsdplatform}" == "openbsd" ]]
+		then
+			platform="OpenBSD"
+		fi
+		if [[ "${bsdplatform}" == "freebsd" ]]
+		then
+			platform="FreeBSD"
+		fi
 	else
 		platform="unknown"
 	fi
@@ -109,7 +124,13 @@ function clean_previous_build {
 platform_recognize_simple # very early e.g. to fix readlink
 echo "Recognized platform: $platform"
 
-readonly dir_base_of_source="$(readlink -e ./)"
+if [[ "${platform}" == "NetBSD" || "${platform}" == "OpenBSD" || "${platform}" == "FreeBSD" ]]
+then
+	rl_command="readlink -f ./"
+else
+	rl_command="readlink -e ./"
+fi
+readonly dir_base_of_source="$(${rl_command})"
 [ -r "toplevel" ] || fail "Run this while being in the top-level directory; Can't find 'toplevel' in PWD=$PWD"
 
 # import fail function
@@ -188,6 +209,17 @@ then
 elif [[ "$platform" == "gnu_linux" ]]
 then
 	echo "PLATFORM - NORMAL POSIX e.g. GNU/Linux ($platform)"
+elif [[ "${platform}" == "NetBSD" ]]
+then
+	echo "PLATFORM - BSD (${platform})"
+	source_file="contrib/config/${platform}.sh"
+	if [[ -f "${source_file}" ]]
+	then
+		echo "Includink ${source_file}"
+		source "${source_file}"
+	else
+		fail "${source_file} not exists"
+	fi
 fi
 
 # Checking if variables are unset, if so setting default values
@@ -265,7 +297,6 @@ if [[ "${BUILD_STATIC:-}"  == "1" ]] ; then
 	FLAG_STATIC="ON"
 fi
 
-set -x
 dir_build="$dir_base_of_source/build"
 echo "Will build into directory dir_build=$dir_build"
 mkdir -p $dir_build
@@ -278,10 +309,9 @@ pushd $dir_build
 		${FLAG_BOOST_ROOT:+"$FLAG_BOOST_ROOT"} \
 		-DUSE_BOOST_MULTIPRECISION_DEFAULT="$USE_BOOST_MULTIPRECISION_DEFAULT" \
 			|| fail "Error: Cmake failed - look above for any other warnings, and read FAQ section in the README.md"
-	set +x
+
 	# the build type CMAKE_BUILD_TYPE is as set in CMakeLists.txt
 
-	set -x
 	if [[ ! -e "./share" ]] ; then
 		ln -s "$dir_base_of_source/share" "./" || echo "Link already exists"
 	fi
@@ -289,7 +319,6 @@ pushd $dir_build
 	make -j"${THREADS}" \
 		|| fail "Error: the Make build failed - look above for any other warnings, and read FAQ section in the README.md"
 
-	set +x
 popd
 
 

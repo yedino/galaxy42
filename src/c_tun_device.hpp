@@ -47,7 +47,7 @@ class c_tun_device {
 
 };
 
-#if defined(false)
+#if 0
 class c_tun_device_freebsd final : public c_tun_device {
 	public:
                 friend class c_event_manager_linux; // for io_service etc?
