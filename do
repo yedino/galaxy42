@@ -127,7 +127,11 @@ echo "Recognized platform: $platform"
 if [[ "${platform}" == "NetBSD" || "${platform}" == "OpenBSD" || "${platform}" == "FreeBSD" ]]
 then
 	rl_command="readlink -f ./"
-else
+elif [[ "${platform}" == "mac_osx" ]]
+then
+	rl_command="greadlink -f ./"
+elif [[ "${platform}" == "gnu_linux" ]]
+then
 	rl_command="readlink -e ./"
 fi
 readonly dir_base_of_source="$(${rl_command})"
@@ -220,6 +224,28 @@ then
 	else
 		fail "${source_file} not exists"
 	fi
+elif [[ "${platform}" == "OpenBSD" ]]
+then
+        echo "PLATFORM - BSD (${platform})"
+        source_file="contrib/config/${platform}.sh"
+        if [[ -f "${source_file}" ]]
+        then
+                echo "Includink ${source_file}"
+                source "${source_file}"
+        else
+                fail "${source_file} not exists"
+        fi
+elif [[ "${platform}" == "FreeBSD" ]]
+then           
+        echo "PLATFORM - BSD (${platform})"
+        source_file="contrib/config/${platform}.sh"
+        if [[ -f "${source_file}" ]]
+        then
+                echo "Includink ${source_file}"
+                source "${source_file}"
+        else
+                fail "${source_file} not exists"
+        fi
 fi
 
 # Checking if variables are unset, if so setting default values
