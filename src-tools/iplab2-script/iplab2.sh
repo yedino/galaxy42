@@ -45,9 +45,12 @@ function help_usage() {
 	echo '  connect "3-4:8" means: my 3-rd card, goes to 4-th computer into his 8-th card'
 	echo "    my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
 	echo "    target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
-	echo '(2) [TODO] give raw URL of network-configuration'
-	echo '  program -N http://[fd42:...]/p2p9x9/blitz4.txt'
-	echo '  under that URL there must be a file in network-configuration p2p9x9 format'
+	echo '(2) [TODO] provide file with network-configuration'
+	echo '  program -F "/etc/iplab2/p2p9x9/blitz4.txt"'
+	echo '(3) provide raw URL of network-configuration'
+	echo '  program -U "http://[fd42:...]/p2p9x9/blitz4.txt"'
+	echo '(3b) [TODO] provide end of URL of network-configuration. Base of the URL is read from configuration file (see script source) and ".txt" is appended.'
+	echo '  program -u "blitz4"'
 	echo "program -h or --help shows help"
 	echo "More information on wiki: https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9"
 	echo ""
@@ -65,6 +68,8 @@ source "$config_global" || fail "Failed to run global config script [$config_glo
 # readonly ipBlock="10"
 # readonly ipNetmask="24"
 # readonly ipVarDir="/var/local/iplab2/"
+# # my network setup
+# readonly ipUrlBase="http://[fd42:....]/p2p9x9/" # or leave this empty. The url for "-u" option to download configuration from
 # # this computer:
 # readonly ipMyBase=4 # <--- put here base-number of current computer
 # declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3...
@@ -183,15 +188,41 @@ echo "Done - applied my wires ($1)"
 
 }
 
+function apply_url_raw() {
+	the_url="$1"
+	the_wire=""
+	echo "Downloading and parsing file from ($the_url)"
+	while IFS= read -r line; do
+		IFS=';' read -r computer wire <<< "$line"
+		echo "Read, computer $computer (looking for $ipMyBase) wire $wire"
+		if [[ "$computer" == "$ipMyBase" ]] ; then
+			echo "OK, Found a config for me ($wire)"
+			the_wire="$wire"
+			break
+		fi
+	done < <(curl -- "$the_url" | egrep -v '^#.*')
+
+	if [[ -n "$the_wire" ]] ; then
+		apply_my_wires "$the_wire"
+	else
+		echo "No wires configured for me, for computer number $ipMyBase."
+	fi
+}
+
 
 # main script:
 
+# ipUrlBase="http://.../"
+
 if [[ "$1" == "-w" ]] ; then
 	apply_my_wires "$2"
-elif [[ "$1" == "-N" ]] ; then
-	echo "Not yet implemented"
+elif [[ "$1" == "-F" ]] ; then
+	echo "Not implemented"
 	exit 2
-	# apply_url_raw "$2"
+elif [[ "$1" == "-u" ]] ; then
+	apply_url_raw "${ipUrlBase}${2}.txt"
+elif [[ "$1" == "-U" ]] ; then
+	apply_url_raw "$2"
 else
 	echo "Unknown command ($1). Use --help to see help."
 	exit 1
