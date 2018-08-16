@@ -37,14 +37,19 @@ function help_usage() {
 	echo "Create file like /etc/iplab2/global.sh (see this script for exact path and copy/paste template of config)"
 	echo ""
 	echo "Usage:"
-	echo 'program "1 100 3:1" "2 100 4:1" "3 101 4:9"'
-	echo 'program "connect1" "connect2" "connect3" ...'
-	echo 'connect is: "my_nic target_base:target_nic"'
-	echo 'connect "2 4:9" means: my 2-nd card, goes to 4-th computer into his 9-th card'
-	echo 'connect "3 4:8" means: my 3-rd card, goes to 4-th computer into his 8-th card'
-	echo "  my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
-	echo "  target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
+	echo '(1) direct input of connections from this computer:'
+	echo '  program -w "1-3:1,2-4:1,3-4:9"'
+	echo '  program -w "connect1,connect2,connect3..."'
+	echo '  connect is: "my_nic-target_base:target_nic"'
+	echo '  connect "2-4:9" means: my 2-nd card, goes to 4-th computer into his 9-th card'
+	echo '  connect "3-4:8" means: my 3-rd card, goes to 4-th computer into his 8-th card'
+	echo "    my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
+	echo "    target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
+	echo '(2) [TODO] give raw URL of network-configuration'
+	echo '  program -N http://[fd42:...]/p2p9x9/blitz4.txt'
+	echo '  under that URL there must be a file in network-configuration p2p9x9 format'
 	echo "program -h or --help shows help"
+	echo "More information on wiki: https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9"
 	echo ""
 }
 [[ -z "$*" ]] && { help_usage ; exit 40 ; }
@@ -67,7 +72,8 @@ source "$config_global" || fail "Failed to run global config script [$config_glo
 
 # // -------------------------------------------------------------------
 
-ipTARGET=( "$@" )
+# ipTARGET=( "$@" )
+IFS=',' read -r -a ipTARGET <<< "$1"
 
 
 echo "---------------------"
@@ -103,8 +109,9 @@ conn_ix=0
 for target in "${ipTARGET[@]}"
 do
 	echo "Parsing connection command [$target]"
-	target2=$( echo "$target" | sed -e's/:/ /g')
-	read my_nicnr target_base target_nicnr <<< "$target2" || fail "Parse error in $[target]"
+	target2=$( echo "$target" | sed -e's/:/ /g' | sed -e's/-/ /g') # change "1-2:3" into "1 2 3"
+	read my_nicnr target_base target_nicnr <<< "$target2" || fail "Parse error in $[target]" # read "1 2 3"
+
 	[[ "$my_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target] ($my_nicnr) my_nicnr"
 	[[ "$target_base" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target] ($target_base) target_base"
 	[[ "$target_nicnr" =~ ^[0-9]{1,3}$ ]] || fail "Not a valid integer in [$target]  ($target_nicnr) target_nicnr"
