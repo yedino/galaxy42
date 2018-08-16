@@ -73,6 +73,9 @@ source "$config_global" || fail "Failed to run global config script [$config_glo
 # // -------------------------------------------------------------------
 
 # ipTARGET=( "$@" )
+
+function apply_my_wires() {
+
 IFS=',' read -r -a ipTARGET <<< "$1"
 
 
@@ -176,7 +179,25 @@ echo 'ping "$(< /var/local/iplab2/ip-conn-2.txt)"   # 2nd connection from above 
 echo 'ping "$(< /var/local/iplab2/ip-nic-1.txt)"   # using 1st of your NIC cards as configured here, no matter what connection'
 echo "etc..."
 
+echo "Done - applied my wires ($1)"
 
-echo "Done"
+}
+
+
+# main script:
+
+if [[ "$1" == "-w" ]] ; then
+	apply_my_wires "$2"
+elif [[ "$1" == "-N" ]] ; then
+	echo "Not yet implemented"
+	exit 2
+	# apply_url_raw "$2"
+else
+	echo "Unknown command ($1). Use --help to see help."
+	exit 1
+fi
+
+
+
 
 
