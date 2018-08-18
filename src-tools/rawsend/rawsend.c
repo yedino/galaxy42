@@ -105,13 +105,15 @@ int main(int argc, char *argv[])
     if (ioctl(sockfd, SIOCGIFHWADDR, &if_mac) < 0)
         perror("SIOCGIFHWADDR");
 
+
+		/* Buffer of BUF_SIZ bytes we'll construct our frame in.
+			 First, clear it all to zero. */
+		memset(sendbuf, 0, BUF_SIZ);
+
     // Loop forever
     while(1) {
 
 
-        /* Buffer of BUF_SIZ bytes we'll construct our frame in.
-           First, clear it all to zero. */
-        memset(sendbuf, 0, BUF_SIZ);
         tx_len = 0;
 
         /* Construct the Ethernet header */
