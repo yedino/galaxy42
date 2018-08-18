@@ -44,7 +44,7 @@
 #define DEST_MAC5    0x62
 
 #define DEFAULT_IF  "wlan0"
-#define BUF_SIZ     1024
+#define BUF_SIZ     1024*64
 
 int main(int argc, char *argv[])
 {
@@ -52,16 +52,41 @@ int main(int argc, char *argv[])
     int i;
     struct ifreq if_idx;
     struct ifreq if_mac;
-    int tx_len;
+    int tx_len; // real tx_len that we filled in
     char sendbuf[BUF_SIZ];
     struct sockaddr_ll socket_address;
     char ifName[IFNAMSIZ];
+    int flood=0; // should we flood at max speed
 
     /* Get interface name */
     if (argc > 1)
         strcpy(ifName, argv[1]);
     else
         strcpy(ifName, DEFAULT_IF);
+
+    if (argc > 2) {
+    	if (0==strcmp("flood",argv[2])) { flood=1; }
+    	else {
+	    	if (0==strcmp("slow",argv[2])) { flood=0; }
+	    	else {
+	    		printf("Use 'flood' or 'slow' as 2nd argument.\n");
+	    		return 1;
+				}
+	    }
+		}
+
+		int tx_want_len=-1; // what size we want to send. -1 means to send that many bytes as we construct e.g. tx_len
+
+		if (argc > 3) {
+			tx_want_len = atoi(argv[3]);
+		}
+
+		if (tx_want_len>=0) {
+			if (tx_want_len >= BUF_SIZ) {
+				printf("Too large data (increase the buffer in source code)\n");
+				return -2;
+			}
+		}
 
     /* Open RAW socket to send on */
     if ((sockfd = socket(AF_PACKET, SOCK_RAW, IPPROTO_RAW)) == -1) {
@@ -135,19 +160,30 @@ int main(int argc, char *argv[])
         socket_address.sll_addr[4] = DEST_MAC4;
         socket_address.sll_addr[5] = DEST_MAC5;
 
+				int tx_send = tx_len; // how much data actually to send. start with the constructed bytes
+        if (tx_want_len >=0 ) tx_send = tx_want_len;
+
         /* Send packet */
-        if (sendto(sockfd, sendbuf, tx_len, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
+        if (sendto(sockfd, sendbuf, tx_send, 0, (struct sockaddr*)&socket_address, sizeof(struct sockaddr_ll)) < 0)
+				{
             printf("Send failed\n");
-        else {
-            printf("Sent :");
-            for (i=0; i < tx_len; i++)
-                printf("%02x:", sendbuf[i]);
-            printf("\n");
+            return 3;
         }
-        /* Wait specified number of microseconds
-           1,000,000 microseconds = 1 second
-           */
-        usleep(1000000);
+        else {
+        		if (!flood) {
+							printf("Sent :");
+							for (i=0; i < tx_len; i++)
+									printf("%02x:", sendbuf[i]);
+							printf("\n");
+						}
+        }
+
+        if (!flood) {
+					/* Wait specified number of microseconds
+						 1,000,000 microseconds = 1 second
+						 */
+					usleep(1000000);
+				}
     }
     return 0;
 }
