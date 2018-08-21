@@ -111,8 +111,6 @@ private:
 
     void deletePeer(const std::string &peer_id);
 
-    QString m_host_port;
-    QString m_host_ip;
     CommandSender* m_sender;
     StatusForm *m_status_form;
     TunTapRunner *m_tuntap_runner;

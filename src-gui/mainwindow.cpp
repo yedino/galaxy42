@@ -316,21 +316,16 @@ void MainWindow::addDebugInfo( const QString &str )
 void MainWindow::loadSettings()
 {
     QSettings setings;
-    QString ip = setings.value( "rpcConnection/Ip" ).toString();
-    QString port = setings.value( "rpcConnection/port" ).toString();
-    if ( port.size()== 0 ) port="42000";			//! @todo add ability of changing port
-    if( ip.size() == 0 ) ip="127.0.0.1";			//localhost
-    m_host_port = port;
-    m_host_ip = ip;
+    QString ip = setings.value( "rpcConnection/Ip", "127.0.0.1" ).toString();
+    QString port = setings.value( "rpcConnection/port", "42000" ).toString();
 
     qDebug()<<"ip & port"<<ip<<" "<<port;
-
 }
 
 void MainWindow::initSettings()
 {
     QSettings setings;
-    if( setings.allKeys().size() >= 2 ) {			//no need to initialize
+    if( setings.childGroups().contains( "rpcConnection" ) ) {			//no need to initialize
         return;
     }
 

@@ -12,7 +12,7 @@ int main( int argc, char *argv[] ) {
         }
 
 
-        QCoreApplication::setOrganizationName( "Tigusoft" );
+        QCoreApplication::setOrganizationName( "Yedino" );
         QCoreApplication::setOrganizationDomain( "https://github.com/yedino/galaxy42" );
         QCoreApplication::setApplicationName( "galaxy-gui" );
 

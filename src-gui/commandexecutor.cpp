@@ -81,8 +81,8 @@ void commandExecutor::sendNetRequest( const order &ord ) {
         if ( !m_net_client->is_connected() ) {
             emit Disconnected();
             QSettings settings;
-            QString ip = "127.0.0.1";// settings.value( "rpcConnection/Ip" ).toString();
-            int port = 42000;// settings.value( "rpcConnection/port" ).toInt();
+            QString ip = settings.value( "rpcConnection/Ip", "127.0.0.1" ).toString();
+            int port = settings.value( "rpcConnection/port", 42000 ).toInt();
             if( m_net_client->startConnect( QHostAddress( ip ),port ) ) {
                 emit Connected();
             }
