@@ -164,10 +164,12 @@ do
 	echo ""
 
 	conn_ix=$(( conn_ix+1 ))
-	echo "${target_ip}" > "${ipVarDir}/ip-nic-${my_nicnr}.txt"
-	echo "${target_ip}" > "${ipVarDir}/ip-conn-${conn_ix}.txt"
-	echo "${my_eth}" > "${ipVarDir}/dev-nic-${my_nicnr}.txt"
-	echo "${my_eth}" > "${ipVarDir}/dev-conn-${conn_ix}.txt"
+	echo "${target_ip}" > "${ipVarDir}/nic${my_nicnr}-dstip.txt"
+	echo "${target_ip}" > "${ipVarDir}/conn${conn_ix}-dstip.txt"
+	echo "${my_ip}" > "${ipVarDir}/nic${my_nicnr}-srcip.txt"
+	echo "${my_ip}" > "${ipVarDir}/conn${conn_ix}-srcip.txt"
+	echo "${my_eth}" > "${ipVarDir}/nic${my_nicnr}-dev.txt"
+	echo "${my_eth}" > "${ipVarDir}/conn${conn_ix}-dev.txt"
 done
 
 echo ""
@@ -181,10 +183,10 @@ do
 done
 
 echo
-echo "You can now run commands that pick up the test IPs like this:"
-echo 'ping "$(< /var/local/iplab2/ip-conn-1.txt)"   # 1st connection from above'
-echo 'ping "$(< /var/local/iplab2/ip-conn-2.txt)"   # 2nd connection from above (if you have it)'
-echo 'ping "$(< /var/local/iplab2/ip-nic-1.txt)"   # using 1st of your NIC cards as configured here, no matter what connection'
+echo "You can now run commands that pick up the test IPs (and dev name) like this:"
+echo 'ping "$(< /var/local/iplab2/nic1-dstip.txt)"   # using 1st of your NIC cards as configured nicnr in your settings'
+echo 'ping "$(< /var/local/iplab2/conn1-dstip.txt)"   # 1st connection from above - IP (it always exists if you connected anything)'
+echo 'ping "$(< /var/local/iplab2/conn2-dstip.txt)"   # 2nd connection from above (if you have it) - IP'
 echo "etc..."
 
 echo "Done - applied my wires ($1)"
