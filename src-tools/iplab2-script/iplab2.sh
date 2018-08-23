@@ -2,7 +2,8 @@
 # iplab2 - Copyrighted (C) 2018 rfree ; BSD 2-clause licence
 # Warning: Quick code for tests, might be insecure !!!
 # This configures IPv4 numbers based on p2p9x9 configuration.
-# See help_usage() or run --help for information and purpose of this script.
+# See help_usage() or run --help for information and purpose of this script,
+# there is a link to the wiki too.
 
 # set -o errexit
 # set -o nounset
@@ -106,7 +107,7 @@ echo
 	mkdir -p "${ipVarDir}" || fail "Can not create dir $ipVarDir"
 }
 
-for ifile in ${ipVarDir}ip-*.txt
+for ifile in "${ipVarDir}"/*
 do
 	[[ -e "$ifile" ]] || break
 	rm --preserve-root "${ifile}"
@@ -165,15 +166,17 @@ do
 	conn_ix=$(( conn_ix+1 ))
 	echo "${target_ip}" > "${ipVarDir}/ip-nic-${my_nicnr}.txt"
 	echo "${target_ip}" > "${ipVarDir}/ip-conn-${conn_ix}.txt"
+	echo "${my_eth}" > "${ipVarDir}/dev-nic-${my_nicnr}.txt"
+	echo "${my_eth}" > "${ipVarDir}/dev-conn-${conn_ix}.txt"
 done
 
 echo ""
 echo "---------------------"
 echo "See IPs in files in $ipVarDir (use in scripts etc)"
-for ifile in ${ipVarDir}ip-*.txt
+for ifile in "${ipVarDir}"*.txt
 do
 	[[ -e "$ifile" ]] || break
-	echo "${ifile}:"
+	echo -n "${ifile}: "
 	cat "${ifile}"
 done
 
