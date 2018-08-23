@@ -2,6 +2,9 @@
 
 # run first the script from https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9
 
+echo "Loading module"
+modprobe pktgen || exit 1
+
 set -x
 
 for file in  /proc/net/pktgen/kpktgend_*
