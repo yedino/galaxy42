@@ -10,6 +10,8 @@
 
 function fail() { echo "Error: $*" ; exit 1; }
 
+ipConfigFile='/etc/iplab2/global.sh'
+
 function help_usage() {
 	echo ""
 	echo "Script to assign IPv4 addresses in format 'p2p9x9' - where up to 9 computers each with up to 9 cards are connected in pairs of poin-to-point connections."
@@ -34,10 +36,10 @@ function help_usage() {
 	echo " .21. is made from CARD numbers on both sides, first digits is CARD NUMBER (2) from computer with smaller BASE number (6<7 therefore take 2), then the other"
 	echo " .62  is made from this computer IP number as first digit, then it's card number. (and for remote IP it's remote's base and then it's card number)"
 	echo ""
-	echo "Setup:"
-	echo "Create file like /etc/iplab2/global.sh (see this script for exact path and copy/paste template of config)"
-	echo ""
 	echo "Usage:"
+	echo '(0)'
+	echo "  program -c # creates the default configuration"
+	echo "  program -h or --help # shows help"
 	echo '(1) direct input of connections from this computer:'
 	echo '  program -w "1-3:1,2-4:1,3-4:9"'
 	echo '  program -w "connect1,connect2,connect3..."'
@@ -46,13 +48,12 @@ function help_usage() {
 	echo '  connect "3-4:8" means: my 3-rd card, goes to 4-th computer into his 8-th card'
 	echo "    my_nic and target_nic - the card numbers, on each computer, are numbered from 1 (so 1,2,3...) and order depends given computer's configuration ipCARD variable. Allowed range is 1..9."
 	echo "    target_base is the base-number of given computer (as he configured in his configuration ipMyBase variable). Allowed range is 1..9/"
-	echo '(2) [TODO] provide file with network-configuration'
-	echo '  program -F "/etc/iplab2/p2p9x9/blitz4.txt"'
-	echo '(3) provide raw URL of network-configuration'
+	echo '(2) provide file with network_layout'
+	echo '  program -f "blitz4.txt"  # will read from file like "/etc/iplab2/p2p9x9/layout/blitz4.txt" depending on config'
+	echo '(3) provide raw URL of network_layout'
 	echo '  program -U "http://[fd42:...]/p2p9x9/blitz4.txt"'
-	echo '(3b) [TODO] provide end of URL of network-configuration. Base of the URL is read from configuration file (see script source) and ".txt" is appended.'
+	echo '(3b) provide URL filename (appended at end of URL base from config, also suffix .txt is added) of network_layout.'
 	echo '  program -u "blitz4"'
-	echo "program -h or --help shows help"
 	echo "More information on wiki: https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9"
 	echo ""
 }
@@ -60,21 +61,50 @@ function help_usage() {
 [[ "$1" == "-h" ]] && { help_usage ; exit 40 ; }
 [[ "$1" == "--help" ]] && { help_usage ; exit 40 ; }
 
-readonly config_global="/etc/iplab2/global.sh" # <--- runs [as root] script ! must be read-only secure location
-source "$config_global" || fail "Failed to run global config script [$config_global] - read my source code for instructions how to create it; Run me with --help to read instructions."
-
-# Installation:
-# ^--- create directory and file as above and put there collowing few lines (uncomment all lines except 1st) and edit this settings to your computer
+function my_create_config() {
+	mkdir -p '/etc/iplab2/'
+	mkdir -p '/etc/iplab2/p2p9x9/layout/'
+	if [[ -r "$ipConfigFile" ]] ; then
+		echo "Main config already existed"
+	else
+		cat << 'EOFEOFEOF' > "$ipConfigFile"
 #!/bin/bash
-# readonly ipBlock="10"
-# readonly ipNetmask="24"
-# readonly ipVarDir="/var/local/iplab2/"
-# # my network setup
-# readonly ipUrlBase="http://[fd42:....]/p2p9x9/" # or leave this empty. The url for "-u" option to download configuration from
-# # this computer:
-# readonly ipMyBase=4 # <--- put here base-number of current computer
-# declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3...
-# ---
+readonly ipBlock="10"
+readonly ipNetmask="24"
+readonly ipVarDir="/var/local/iplab2/"
+readonly ipFileBase="/etc/iplab2/p2p9x9/layout/" # usually leave it as is. for "-f" option to read configuration from.
+# my network setup
+readonly ipUrlBase="http://[fd42:....]/p2p9x9/" # or leave this empty. The url for "-u" option to download configuration from.
+# this computer - you MUST configure this:
+readonly ipMyBase=0 # <--- put here base-number of current computer
+declare -a ipCARD=("enp1s0f0" "enp1s0f1") # <--- put here list of network cards you have (devices names) they will be in order your nicnr 1,2,3..., e.g. "enp1s0f0" "enp1s0f1"
+EOFEOFEOF
+	fi
+
+	f='/etc/iplab2/p2p9x9/layout/pair.txt'
+	if [[ -r "$f" ]] ; then
+		echo "Config ($f) already exists"
+	else
+		cat << 'EOFEOFEOF' > "$f"
+# p2p9x9 ip config for iplab2 - see https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9
+# Just two computers, each with one card, connected
+1;1-2:1
+# ^- for computer1: take your card1, and connect to computer2 his card1
+2;1-1:2
+# ^- for computer2: take your card1, and connect to computer1 his card1
+EOFEOFEOF
+
+echo "Config creation done (please edit it: $ipConfigFile)"
+
+	fi
+}
+
+[[ "$1" == "-c" ]] && { my_create_config ; exit 40 ; }
+
+# // -------------------------------------------------------------------
+
+source "$ipConfigFile" || fail "Failed to run global config script [$ipConfigFile] - read my source code for instructions how to create it; Run me with --help to read instructions."
+
 
 # // -------------------------------------------------------------------
 
@@ -86,7 +116,7 @@ IFS=',' read -r -a ipTARGET <<< "$1"
 
 
 echo "---------------------"
-echo "Your cards (configured in $config_global)"
+echo "Your cards (configured in $ipConfigFile)"
 ix=1
 for target in "${ipCARD[@]}"
 do
@@ -193,10 +223,18 @@ echo "Done - applied my wires ($1)"
 
 }
 
-function apply_url_raw() {
-	the_url="$1"
-	the_wire=""
-	echo "Downloading and parsing file from ($the_url)"
+function apply_network_layout() {
+	the_source="$1"
+	the_url="$2"
+	if [[ "$the_source" == "curl" ]] ; then
+		echo "Loading from network ($the_url)"
+	elif [[ "$the_source" == "file" ]] ; then
+		echo "Loading from file ($the_url)"
+	else
+		fail "Invalid source ($the_source)"
+	fi
+
+	the_wire=''
 	while IFS= read -r line; do
 		IFS=';' read -r computer wire <<< "$line"
 		echo "Read, computer $computer (looking for $ipMyBase) wire $wire"
@@ -205,13 +243,23 @@ function apply_url_raw() {
 			the_wire="$wire"
 			break
 		fi
-	done < <(curl -- "$the_url" | egrep -v '^#.*')
+	done < <(
+		if [[ "$the_source" == "curl" ]] ; then
+			curl -- "$the_url" | egrep -v '^#.*'
+		elif [[ "$the_source" == "file" ]] ; then
+			cat "$the_url" | egrep -v '^#.*'
+		fi
+	)
 
 	if [[ -n "$the_wire" ]] ; then
 		apply_my_wires "$the_wire"
 	else
 		echo "No wires configured for me, for computer number $ipMyBase."
 	fi
+}
+
+function apply_url_raw() {
+	read_network_layout
 }
 
 
@@ -221,19 +269,16 @@ function apply_url_raw() {
 
 if [[ "$1" == "-w" ]] ; then
 	apply_my_wires "$2"
-elif [[ "$1" == "-F" ]] ; then
-	echo "Not implemented"
-	exit 2
+elif [[ "$1" == "-f" ]] ; then
+	[[ -z "$ipFileBase" ]] && fail "Please configure ipFileBase option in configuration (it is empty now) to use this option."
+	apply_network_layout "file" "${ipFileBase}${2}.txt"
 elif [[ "$1" == "-u" ]] ; then
-	apply_url_raw "${ipUrlBase}${2}.txt"
+	apply_network_layout "curl" "${ipUrlBase}${2}.txt"
 elif [[ "$1" == "-U" ]] ; then
-	apply_url_raw "$2"
+	apply_network_layout "curl" "${2}"
 else
 	echo "Unknown command ($1). Use --help to see help."
 	exit 1
 fi
-
-
-
 
 
