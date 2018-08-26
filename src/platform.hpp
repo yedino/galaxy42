@@ -16,7 +16,7 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 
 // in c++17 ATTR_NODISCARD is in standard: [[nodiscard]]
 #if defined(__linux__)
-	#define ANTINET_linux
+	//#define ANTINET_linux
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
         #undef EMPTY
 #endif
@@ -28,7 +28,7 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 		#define ATTR_NODISCARD _Check_return_
 	#endif
 
-	#define ANTINET_windows
+	//#define ANTINET_windows
 
 	#if defined(__CYGWIN__)
 		//http://www.boost.org/doc/libs/1_61_0/doc/html/boost_asio/using.html
@@ -48,27 +48,27 @@ static_assert( UCHAR_MAX == 255 , "This code requires UCHAR_MAX == 255.");
 #endif
         
 #if defined(__MACH__)
-	#define ANTINET_macosx
+	//#define ANTINET_macosx
 	#define ATTR_NODISCARD __attribute__((warn_unused_result))
         #undef EMPTY
 #endif
 
 #if defined(__NetBSD__)
-        #define ANTINET_netbsd
+        //#define ANTINET_netbsd
         #define IFNAME "tun0"
         #define ATTR_NODISCARD __attribute__((warn_unused_result)) // XXX: ?
         #undef EMPTY
 #endif
 
 #if defined(__OpenBSD__)
-        #define ANTINET_openbsd
+        //#define ANTINET_openbsd
         #define IFNAME "tun0"
         #define ATTR_NODISCARD __attribute__((warn_unused_result)) // XXX: ?
         #undef EMPTY
 #endif
 
 #if defined(__FreeBSD__)
-        #define ANTINET_freebsd
+        //#define ANTINET_freebsd
         #define IFNAME "tun0"
         #define ATTR_NODISCARD __attribute__((warn_unused_result)) // XXX: ?
         #undef EMPTY

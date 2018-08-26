@@ -454,31 +454,43 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	file(GLOB SOURCES_TUNTAP_DRIVER
 		src/tuntap/linux/*
 		)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_linux")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_linux")
 endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "NetBSD")
 	file(GLOB SOURCES_TUNTAP_DRIVER 
 		src/tuntap/netbsd/*
 		)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_netbsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_netbsd")
 endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
 	file(GLOB SOURCES_TUNTAP_DRIVER
                 src/tuntap/openbsd/*
-                ) 
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_openbsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_openbsd")
 endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
         file(GLOB SOURCES_TUNTAP_DRIVER
                 src/tuntap/freebsd/*
                 )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_freebsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_freebsd")
 endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
 	file(GLOB SOURCES_TUNTAP_DRIVER
                 src/tuntap/windows/*
-                ) 
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_windows")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_windows")
 endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 	file(GLOB SOURCES_TUNTAP_DRIVER
                 src/tuntap/macosx/*
                 )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_macosx")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_macosx")
 endif()
 
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
