@@ -270,11 +270,21 @@ function apply_url_raw() {
 if [[ "$1" == "-w" ]] ; then
 	apply_my_wires "$2"
 elif [[ "$1" == "-f" ]] ; then
+	# relative file name
 	[[ -z "$ipFileBase" ]] && fail "Please configure ipFileBase option in configuration (it is empty now) to use this option."
-	apply_network_layout "file" "${ipFileBase}${2}.txt"
+	param="$2"
+	[[ "$param" =~ ^[0-9a-zA-Z_-]+$ ]] || fail "Invalid file name provided [$param] (insecure, but be simple alphanum_- name, no dirs, no dots, we will add .txt)"
+	apply_network_layout "file" "${ipFileBase}${param}.txt"
 elif [[ "$1" == "-u" ]] ; then
+	# relative URL name
+	[[ -z "$ipUrlBase" ]] && fail "Please configure ipUrlBase option in configuration (it is empty now) to use this option."
+	param="$2"
+	[[ "$param" =~ ^[0-9a-zA-Z_-]+$ ]] || fail "Invalid file name provided [$param] (insecure, but be simple alphanum_- name, no dirs, no dots, we will add .txt)"
 	apply_network_layout "curl" "${ipUrlBase}${2}.txt"
 elif [[ "$1" == "-U" ]] ; then
+	# full URL, must start with http:// or https://
+	param="$2"
+	[[ "$param" =~ ^(http://|https://).+$ ]] || fail "Invalid file name provided [$param] (must be a full URL starting with http:// or https://)"
 	apply_network_layout "curl" "${2}"
 else
 	echo "Unknown command ($1). Use --help to see help."
