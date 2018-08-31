@@ -51,7 +51,7 @@ function prepare_sending() {
 	echo "TESTING: on device [$card], will send to target [$target] UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP datagram size actually)"
 
 	# set -x
-	for (( i=0; $i <= $threads; i++ )) ; do
+	for (( i=0; $i < $threads; i++ )) ; do
 		num=$(( send_start + i ))
 		send="${card}@${num}"
 		num_thread=$(( num % kpkt_max_thread ))
