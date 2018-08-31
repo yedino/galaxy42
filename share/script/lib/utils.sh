@@ -409,6 +409,29 @@ function platforminfo_set_mountflags() {
 	return 1
 }
 
-
-
+# parameter is megabytes per thread
+function pfp_util_estimate_make_threads() {
+       local threads=1
+       if [[ -r /proc/meminfo ]]; 
+       then
+               mem_per_thread=$1
+               memavaiable=$( cat /proc/meminfo | grep 'MemAvailable' | awk -F " " '{print $2}' )
+               memavaiable=$( echo "${memavaiable}/1024" | bc )
+               num_cores=$( cat /proc/cpuinfo | grep processor | wc -l )
+               num_threads_from_ram=$( echo "${memavaiable}/${mem_per_thread}" | bc )
+               num_cores=$( expr ${num_cores} + 1 )
+               if [ ${num_threads_from_ram} -ge 0 ];
+               then
+                       if [ ${num_threads_from_ram} -gt ${num_cores} ];
+                       then
+                               echo "Limiting number of threads due to CPU cores, from ${num_threads_from_ram} to ${num_cores} (memory per thread needed is assumed:      ${mem_per_thread} MB)" >&2
+                               threads=${num_cores}
+                       else
+                               echo "Limiting number of threads due to ${num_threads_from_ram} (memory per thread needed is assumed: ${mem_per_thread} MB)" >&2
+                               threads=${num_threads_from_ram}
+                       fi
+               fi
+       fi
+       echo ${threads}
+}
 

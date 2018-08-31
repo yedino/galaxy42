@@ -383,7 +383,7 @@ int c_maintask::run(int argc, const char * argv[])
 
 		std::cerr << "Sending now ";
 		if (count_infinite) std::cerr << " infinite "; else std::cerr << count;
-		std::cerr << " time(s) an UDP packet: ";
+		std::cerr << " time(s) an UDP packet to [" << host << " port "<<port<<"]: ";
 		std::cerr << "datagram: size " << request_length << " B " << "\n";
 		// std::cerr << "request=\"" << request << "\"" << "\n";
 		std::cerr << "message=\"" << message << "\"" << "\n";
