@@ -45,7 +45,7 @@ function prepare_sending() {
 	port_low="$4"
 	port_high="$5"
 	send_start="$6"
-	mtu="$5"
+	mtu="$7"
 
 	echo "TESTING: on device [$card], will send to target [$target] UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP)"
 
