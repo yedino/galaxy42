@@ -103,13 +103,14 @@ do
 		IFS=' ' read -r arp_ip arp_hwtype arp_mac other_fields <<< "$arp_line"
 		if [[ "$arp_ip" == "$this_targetip" ]] ; then
 			this_mac="$arp_mac"
+			[[ $arp_hwtype == "(incomplete)" ]] && this_mac="" # delete MAC from incomplete (anyway collumns are then missing)
 			break
 		fi
 	done < <(
 		arp
 	)
 
-	if [[ -e "$this_mac" ]] ; then
+	if [[ -z "$this_mac" ]] ; then
 		echo "=== WARNING === can not find MAC addr (from arp) for $this_targetip on $this_dev"
 	else
 		echo "$this_targetip on $this_dev has MAC addr $this_mac"
