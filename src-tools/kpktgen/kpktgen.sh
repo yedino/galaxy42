@@ -23,6 +23,14 @@ fi
 echo "Loading module"
 modprobe pktgen || exit "Can not load module pktgen"
 
+echo "Detecting max threads..."
+for ((i = 1; 1 ; i++)); do
+	[[ -e "/proc/net/pktgen/kpktgend_$i" ]] || break
+done
+kpkt_max_thread=$i
+echo "number of kpktgen max threads: $kpkt_max_thread"
+
+
 # set -x
 
 for file in  /proc/net/pktgen/kpktgend_*
@@ -45,7 +53,10 @@ function prepare_sending() {
 	for (( i=0; $i <= $threads; i++ )) ; do
 		num=$(( send_start + i ))
 		send="${card}@${num}"
-		echo "add_device $send" >> "/proc/net/pktgen/kpktgend_$num" || fail "Can not add_device"
+		num_thread=$(( num % kpkt_max_thread ))
+		kpkt_thread_file="/proc/net/pktgen/kpktgend_$num_thread"
+		echo "... [$send] via thread file [$kpkt_thread_file]"
+		echo "add_device $send" >> "$kpkt_thread_file"  || fail "Can not add_device"
 		echo "count 0" >> "/proc/net/pktgen/$send"
 		# echo "clone_skb 100" >> "/proc/net/pktgen/$send"
 		# echo "frags 1" >> "/proc/net/pktgen/$send"
@@ -67,7 +78,7 @@ thr="$2"
 port_low="$3"
 port_high="$4"
 mode="$5"
-shift ; shift ; shift ;
+shift ; shift ; shift ; shift ; shift
 
 echo "Config: mtu=$mtu threads=$thr"
 
