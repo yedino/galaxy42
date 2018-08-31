@@ -47,8 +47,9 @@ function prepare_sending() {
 	port_high="$5"
 	send_start="$6"
 	mtu="$7"
+	mac="$8"
 
-	echo "TESTING: on device [$card], will send to target [$target] UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP datagram size actually)"
+	echo "TESTING: on device [$card], will send to target [$target] (MAC $mac) UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP datagram size actually)"
 
 	# set -x
 	for (( i=0; $i < $threads; i++ )) ; do
@@ -69,6 +70,7 @@ function prepare_sending() {
 		echo "udp_dst_max $port_high" >> "/proc/net/pktgen/$send"
 		echo "dst_min $target" >> "/proc/net/pktgen/$send"
 		echo "dst_max $target" >> "/proc/net/pktgen/$send"
+		echo "dst_mac $mac" >> "/proc/net/pktgen/$send" # MAC address
 	done
 	# set +x
 }
@@ -95,17 +97,31 @@ do
 	this_dev=""
 	this_targetip=""
 	this_dev=$(cat "/var/local/iplab2/nic${cardnr}-dev.txt") || fail "Can not read p2p9x9 config"
-		this_targetip=$(cat "/var/local/iplab2/nic${cardnr}-dstip.txt") || fail "Can not read p2p9x9 config"
+	this_targetip=$(cat "/var/local/iplab2/nic${cardnr}-dstip.txt") || fail "Can not read p2p9x9 config"
+	this_mac=""
+	while IFS= read -r arp_line; do
+		IFS=' ' read -r arp_ip arp_hwtype arp_mac other_fields <<< "$arp_line"
+		if [[ "$arp_ip" == "$this_targetip" ]] ; then
+			this_mac="$arp_mac"
+			break
+		fi
+	done < <(
+		arp
+	)
 
-	prepare_sending "${this_dev}" "${this_targetip}" "$thr" "$port_low" "$port_high" "$begin" "$mtu"
+	if [[ -e "$this_mac" ]] ; then
+		echo "=== WARNING === can not find MAC addr (from arp) for $this_targetip on $this_dev"
+	else
+		echo "$this_targetip on $this_dev has MAC addr $this_mac"
+	fi
+
+	prepare_sending "${this_dev}" "${this_targetip}" "$thr" "$port_low" "$port_high" "$begin" "$mtu" "$this_mac"
 	begin=$((begin+thr))
 done
 
 
 echo "Starting the send - NOW... (you can press ctrl-C to exit)"
-
 echo "start" >> /proc/net/pktgen/pgctrl
-
 echo "done."
 
 
