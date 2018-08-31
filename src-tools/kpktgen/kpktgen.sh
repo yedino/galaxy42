@@ -10,9 +10,10 @@ function fail() {
 
 if [[ -z "$1" ]] ; then
 	echo "Usage:"
-	echo "$0 MTU THR port_low port_high cardnr 1 2 3 4 ..."
+	echo "$0 PCK_SIZE THR port_low port_high cardnr 1 2 3 4 ..."
 	echo "$0 8972 2  5555     5559      cardnr 1 2 3 4 ...    # will send UDP 8972 B datagrams, in 2 thread/card, on cardnr 1,2,3,4 as configured in p2p9x9 to port 5555..5559"
 	echo "$0 8972 2  5555     5555      cardnr 1 2 3 4 ...    # just one port 5555. might be worse for some multiqueue NICs?"
+	echo "PCK_SIZE is usually MTU-28, for ipv4 targets, this is size of UDP datagram"
 	echo "First run configuration script p2p9x9 ( https://github.com/yedinocommunity/galaxy42/wiki/p2p9x9 )"
 	echo
 	exit 1
@@ -47,7 +48,7 @@ function prepare_sending() {
 	send_start="$6"
 	mtu="$7"
 
-	echo "TESTING: on device [$card], will send to target [$target] UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP)"
+	echo "TESTING: on device [$card], will send to target [$target] UDP port $port_low...$port_high, using threads [$threads], with MTU=$mtu (UDP datagram size actually)"
 
 	# set -x
 	for (( i=0; $i <= $threads; i++ )) ; do
@@ -73,7 +74,7 @@ function prepare_sending() {
 }
 
 begin=0
-mtu="$1"
+mtu="$1" # this is UDP datagram size actually
 thr="$2"
 port_low="$3"
 port_high="$4"
