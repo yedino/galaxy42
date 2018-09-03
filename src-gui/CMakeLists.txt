@@ -18,7 +18,7 @@ file(GLOB src
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
-find_package(Qt5 COMPONENTS Core Gui Network Multimedia Widgets REQUIRED)
+find_package(Qt5 5.6 COMPONENTS Core Gui Network Multimedia Widgets REQUIRED)
 
 find_package(Sodium REQUIRED)
 
