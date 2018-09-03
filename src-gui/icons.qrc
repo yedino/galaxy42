@@ -21,5 +21,6 @@
         <file alias="search">../recources/gui/icons/Magnifier.png</file>
         <file alias="letter">../recources/gui/icons/Script-Edit.png</file>
         <file alias="group-delete">../recources/gui/icons/Group-Delete.png</file>
+        <file alias="main-icon">../recources/gui/icons/jko.png</file>
         </qresource>
 </RCC>
