@@ -17,6 +17,7 @@ int main( int argc, char *argv[] ) {
         QCoreApplication::setApplicationName( "galaxy-gui" );
 
         QApplication a( argc, argv );
+        QApplication::setWindowIcon(QIcon(":/main-icon"));
 
 //      std::shared_ptr<MainWindow> w = MainWindow::create_shared_ptr();
 //        MainWindow *w = new MainWindow(&a);
