@@ -9,6 +9,8 @@
 #include <iostream>
 #include <tnetdbg.hpp>
 
+using namespace std;
+
 TEST(cable_Test, operators_test) {
 	auto world = make_shared<c_world>();
 	auto udp_addr1 = c_cable_base_addr::cable_make_addr("udp:192.166.218.58:9042");

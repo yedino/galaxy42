@@ -63,7 +63,7 @@ void c_multicryptostrings<TKey>::update_hash() const {
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
 	int used_types_check=0; // counter just to assert
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
-		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
+		const std::vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
 		if (pubkeys_of_this_system.size()) { // save them this time
 			++used_types_check;
 			gen.push_byte_u(  t_crypto_system_type_to_ID(ix) ); // save key type
@@ -84,9 +84,9 @@ void c_multicryptostrings<TKey>::update_hash() const {
 		}
 	}
 	assert(used_types_check == used_types); // we written same amount of keys as we previously counted
-	string fingerprint_serial = gen.str();
+	std::string fingerprint_serial = gen.str();
 
-	string myhash = Hash1( fingerprint_serial );
+	std::string myhash = Hash1( fingerprint_serial );
 
 	m_hash_cached =  myhash;
 }
@@ -155,7 +155,7 @@ std::string c_multicryptostrings<TKey>::serialize_bin() const { ///< returns a s
 	gen.push_integer_uvarint(used_types); // save the size of crypto list (number of main elements)
 	int used_types_check=0; // counter just to assert
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
-		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
+		const std::vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
 		if (pubkeys_of_this_system.size()) { // save them this time
 			++used_types_check;
 			gen.push_integer_uvarint(  t_crypto_system_type_to_ID(ix) ); // save key type
@@ -174,8 +174,8 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 	auto magic_marker = parser.pop_bytes_n(3);
 	if (magic_marker !=  "GMK") throw
 
-		std::runtime_error( string("Format incorrect: bad magic marker for GMK (was: ")
-			+ ::to_debug(magic_marker) + string(")"));
+		std::runtime_error( std::string("Format incorrect: bad magic marker for GMK (was: ")
+			+ ::to_debug(magic_marker) + std::string(")"));
 
 	auto magic_version = parser.pop_byte_u();
 
@@ -203,7 +203,7 @@ void c_multicryptostrings<TKey>::load_from_bin(const std::string & data) {
 }
 
 template <typename TKey>
-void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool overwrite) const {
+void c_multicryptostrings<TKey>::datastore_save(const std::string  & fname, bool overwrite) const {
 	// TODO need a serialize_bin() that works on, and returns, a locked_string
 	pfp_note("Saving key to fname="<<fname);
 
@@ -234,7 +234,7 @@ void c_multicryptostrings<TKey>::datastore_save(const string  & fname, bool over
 }
 
 template <typename TKey>
-void c_multicryptostrings<TKey>::datastore_load(const string  & fname) {
+void c_multicryptostrings<TKey>::datastore_load(const std::string  & fname) {
 	std::string data;
 	locked_string buff_safe;
 
@@ -276,10 +276,10 @@ void c_multicryptostrings<TKey>::clear() {
 
 template <typename TKey>
 std::string c_multicryptostrings<TKey>::to_debug() const {
-	ostringstream oss;
+	std::ostringstream oss;
 	oss << "MK(";
 	for (size_t ix=0; ix<m_cryptolists_general.size(); ++ix) { // for all key type (for each element)
-		const vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
+		const std::vector<TKey> & pubkeys_of_this_system  = m_cryptolists_general.at(ix); // take vector of keys
 		if (pubkeys_of_this_system.size()) {
 			oss << t_crypto_system_type_to_name(ix);
 			oss <<  " *" << pubkeys_of_this_system.size();

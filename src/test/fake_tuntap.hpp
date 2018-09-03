@@ -3,7 +3,7 @@
 
 #include "gtest/gtest.h"
 
-#include "../libs0.hpp"
+#include <atomic>
 /*
 #include "../galaxysrv.hpp"
 #include "../newloop.hpp"

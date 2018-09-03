@@ -6,6 +6,7 @@
 #include <exception>
 #include <cmath>
 #include <type_traits>
+#include <utils/unused.hpp>
 
 #if USE_BOOST_MULTIPRECISION
 

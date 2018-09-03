@@ -1,7 +1,6 @@
 #include "tuntap_base.hpp"
-#include "libs0.hpp"
-
 #include "utils/boost_asio_helper.hpp"
+#include "utils/check.hpp"
 
 std::string NetPlatform_error_code_to_string(int err) {
 	switch (err) {

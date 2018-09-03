@@ -1,6 +1,6 @@
 
 #include "galaxysrv_engine.hpp"
-
+#include <stdplus/eint.hpp>
 
 c_weld::c_weld(size_t memsize)
 :
@@ -18,7 +18,7 @@ void c_weld::clear() {
 }
 
 size_t c_weld::get_free_size() const {
-	return eint::eint_minus( m_buf.size() , m_bufWrite );
+	return stdplus::eint::eint_minus( m_buf.size() , m_bufWrite );
 }
 
 void c_weld::adjust_bufWrite(size_t new_bufWrite) {

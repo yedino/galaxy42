@@ -73,7 +73,6 @@ const char * g_demoname_default = "route_dij";
 // see function run_mode_developer() here to see list of possible values
 
 
-#include "libs1.hpp"
 
 #include "tunserver.hpp"
 
@@ -85,8 +84,10 @@ const char * g_demoname_default = "route_dij";
 #include "trivialserialize.hpp"
 #include "counter.hpp"
 #include "generate_crypto.hpp"
+#include <strings_utils_simple.hpp>
 
-
+using namespace std;
+using namespace stdplus;
 
 #ifdef __linux__  // for low-level Linux-like systems TUN operations
 #include "../depends/cjdns-code/NetPlatform.h" // from cjdns

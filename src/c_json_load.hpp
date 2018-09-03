@@ -2,15 +2,11 @@
 
 #pragma once
 
-#include "gtest/gtest_prod.h"
-#include "libs1.hpp"
 
 #include <json.hpp>
 using json = nlohmann::json;
 
-#include "c_json_genconf.hpp"
 #include "c_peering.hpp"
-#include "strings_utils.hpp"
 
 struct t_my_keypair {
 	std::string m_private_key_type;

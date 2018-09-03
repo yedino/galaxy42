@@ -5,7 +5,6 @@
 #include <cable/asio_ioservice_manager.hpp>
 #include <cable/kind.hpp>
 #include <cable/selector.hpp>
-#include <libs0.hpp>
 
 /** Group of cable-cards (virtual transport network "card"),
  * group of objects like the object used to send/receive UDP transport data, other one for TCP etc
@@ -25,13 +24,13 @@ class c_cable_cards final {
 		void stop_threadsafe(); ///< tries to stop all io_services, and all cards. [thread_safe]
 
 	private:
-		unique_ptr<c_cable_base_obj> create_card(const c_card_selector & selector); ///< factory for cards
+		std::unique_ptr<c_cable_base_obj> create_card(const c_card_selector & selector); ///< factory for cards
 
-		map< c_card_selector , unique_ptr<c_cable_base_obj> > m_cards;
+		std::map< c_card_selector , std::unique_ptr<c_cable_base_obj> > m_cards;
 
-		shared_ptr<c_asioservice_manager_base> m_asioservice_manager; ///< needed to create cables based on asio service
+		std::shared_ptr<c_asioservice_manager_base> m_asioservice_manager; ///< needed to create cables based on asio service
 
-		shared_ptr<c_asioservice_manager_base> & get_asioservice(); ///< creates if needed and returns an asioservice manager
+		std::shared_ptr<c_asioservice_manager_base> & get_asioservice(); ///< creates if needed and returns an asioservice manager
 };
 
 

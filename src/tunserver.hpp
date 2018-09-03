@@ -138,7 +138,7 @@ class c_routing_manager { ///< holds knowledge about routes, and searches for ne
 				// ... meanwhile ...
 				//                    guy ttl4 --> ttl3 *MYSELF*, highest_ttl=3(!!!), when we execute then: send ttl=2 (when timeout!) then ask_ttl=2
 
-				map< c_route_reason , c_route_reason_detail > m_request; ///< information about all other people who are asking about this address
+				std::map< c_route_reason , c_route_reason_detail > m_request; ///< information about all other people who are asking about this address
 
 				c_route_search(c_haship_addr addr, int basic_ttl);
 
@@ -147,11 +147,11 @@ class c_routing_manager { ///< holds knowledge about routes, and searches for ne
 		};
 
 		// searches:
-		typedef std::map< c_haship_addr, unique_ptr<c_route_search> > t_route_search_by_dst; ///< running searches, by the hash-ip of finall destination
+		typedef std::map< c_haship_addr, std::unique_ptr<c_route_search> > t_route_search_by_dst; ///< running searches, by the hash-ip of finall destination
 		t_route_search_by_dst m_search; ///< running searches
 
 		// known routes:
-		typedef std::map< c_haship_addr, unique_ptr<c_route_info> > t_route_nexthop_by_dst; ///< routes to destinations: the hash-ip of next hop, by hash-ip of finall destination
+		typedef std::map< c_haship_addr, std::unique_ptr<c_route_info> > t_route_nexthop_by_dst; ///< routes to destinations: the hash-ip of next hop, by hash-ip of finall destination
 		t_route_nexthop_by_dst m_route_nexthop; ///< known routes: the hash-ip of next hop, indexed by hash-ip of finall destination
 
 		const c_route_info & add_route_info_and_return(c_haship_addr target, c_route_info route_info); ///< learn a route to this target. If it exists, then merge it correctly (e.g. pick better one)
@@ -168,10 +168,10 @@ class c_tunnel_use : public antinet_crypto::c_crypto_tunnel {
 
 	public:
 		c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
-			const antinet_crypto::c_multikeys_pub & ID_them, const string& nicename);
+			const antinet_crypto::c_multikeys_pub & ID_them, const std::string& nicename);
 		c_tunnel_use(const antinet_crypto::c_multikeys_PAIR & ID_self,
 			const antinet_crypto::c_multikeys_pub & ID_them,
-			const std::string & packetstart, const string& nicename );
+			const std::string & packetstart, const std::string& nicename );
 };
 
 // ------------------------------------------------------------------
@@ -187,34 +187,34 @@ class c_tunserver : public c_galaxy_node {
 		/// to easily call constructor without providing real #early_argm, e.g. when using in an unittest
 		static boost::program_options::variables_map get_default_early_argm();
 
-		void set_desc(shared_ptr< boost::program_options::options_description > desc);
-		void set_argm(shared_ptr< boost::program_options::variables_map > argm);
+		void set_desc(std::shared_ptr< boost::program_options::options_description > desc);
+		void set_argm(std::shared_ptr< boost::program_options::variables_map > argm);
 
 		void configure_mykey(const std::string &ipv6_prefix); ///<  load my (this node's) keypair
 		void run(int time = 0); ///< run the main loop
 
 		/// @name Functions that execute a program action like creation of key, calculating signature, etc.
 		/// @{
-		void program_action_set_IDI(const string & keyname); ///< set configured IDI key (write the config to disk) @deprecated
+		void program_action_set_IDI(const std::string & keyname); ///< set configured IDI key (write the config to disk) @deprecated
 		void program_action_gen_key(const boost::program_options::variables_map & argm); ///< generate a key according to given options @deprecated
 		std::string program_action_gen_key_simple(); ///< generates recommended simple key, returns name e.g. "IDI" @deprecated
 		/// @}
 
-		void set_my_name(const string & name); ///< set a nice name of this peer (shown in debug for example)
+		void set_my_name(const std::string & name); ///< set a nice name of this peer (shown in debug for example)
 		const antinet_crypto::c_multikeys_pub & read_my_IDP_pub() const; ///< read the pubkey of the (main / permanent) ID of this server
-		string get_my_ipv6_nice() const; ///< returns the main HIP IPv6 of this node in a nice format (e.g. hexdot)
+		std::string get_my_ipv6_nice() const; ///< returns the main HIP IPv6 of this node in a nice format (e.g. hexdot)
 		int get_my_stats_peers_known_count() const; ///< get the number of currently known peers, for information
 
 		bool add_peer(const t_peering_reference & peer_ref); ///< add this as peer (just from reference), @returns true if peer added or false if peer already exists
 		void add_peer_to_black_list(const c_haship_addr & hip); ///< add this to black list
-		void add_peer_simplestring(const string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
-		void add_peer_simplestring_new_format(const string & simple); ///< add this as peer, from a simple string new format
+		void add_peer_simplestring(const std::string & simple); ///< add this as peer, from a simple string like "ip-pub" TODO(r) instead move that to ctor of t_peering_reference
+		void add_peer_simplestring_new_format(const std::string & simple); ///< add this as peer, from a simple string new format
 		bool delete_peer(const c_haship_addr &hip); ///< delete this as peer, @return true if peer deleted, false if peer not found
 		void delete_peer_from_black_list(const c_haship_addr & hip); ///< delete this from black list
-		bool delete_peer_simplestring(const string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
+		bool delete_peer_simplestring(const std::string & simple, bool is_banned); ///< delete this as peer, from a simple string if is_banned==true also add peer to black list
 		void delete_all_peers(bool is_banned); ///< delete all peers if is_banned=true also add peer to black list
 		///! add this user (or append existing user) with his actuall public key data
-		void add_peer_append_pubkey(const t_peering_reference & peer_ref, unique_ptr<c_haship_pubkey> && pubkey);
+		void add_peer_append_pubkey(const t_peering_reference & peer_ref, std::unique_ptr<c_haship_pubkey> && pubkey);
 		void add_tunnel_to_pubkey(const c_haship_pubkey & pubkey);
 
 		typedef enum {
@@ -274,13 +274,13 @@ class c_tunserver : public c_galaxy_node {
 
 	private:
 
-		static bool check_arg_bool(const string arg_name, const boost::program_options::variables_map & early_argm, bool default_val);
-		static std::string check_arg_string(const string arg_name, const boost::program_options::variables_map & early_argm, const std::string & default_val);
+		static bool check_arg_bool(const std::string arg_name, const boost::program_options::variables_map & early_argm, bool default_val);
+		static std::string check_arg_string(const std::string arg_name, const boost::program_options::variables_map & early_argm, const std::string & default_val);
 
         #ifdef HTTP_DBG
 		mutable Mutex m_my_mutex; ///< [thread] lock this before woring on this class (to protect from access from e.g. httpdbg)
         #endif
-		string m_my_name; ///< a nice name, see set_my_name
+		std::string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
 		#ifdef __linux__
 		c_tun_device_linux m_tun_device;
@@ -301,13 +301,13 @@ class c_tunserver : public c_galaxy_node {
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
 
-		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-        shared_ptr< boost::program_options::variables_map > m_argm;
+		std::shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
+        std::shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 
-		using t_peers_by_haship = std::map< c_haship_addr, unique_ptr<c_peering> >; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
+		using t_peers_by_haship = std::map< c_haship_addr, std::unique_ptr<c_peering> >; ///< peers (we always know their IPv6 - we assume here), indexed by their hash-ip
 		mutable Mutex m_peer_etc_mutex; ///< one mutex protects m_peer and m_peer_black_list for avoid possible deadlocks
 		t_peers_by_haship m_peer GUARDED_BY(m_peer_etc_mutex); ///< my peers, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
 		std::set<c_haship_addr> m_peer_black_list GUARDED_BY(m_peer_etc_mutex); ///< my peers black list, indexed by their hash-ip. MUST BE used only protected by m_peer_etc_mutex!
@@ -320,7 +320,7 @@ class c_tunserver : public c_galaxy_node {
 
 		c_haship_addr m_my_hip; ///< my HIP that results from m_my_IDC, already cached in this format
 
-		std::map< c_haship_addr, unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
+		std::map< c_haship_addr, std::unique_ptr<c_tunnel_use> > m_tunnel; ///< my crypto tunnels
 
 		bool enable_remove=false; // if false then just count, do not remove
 		bool is_exiting=false; // if true exiting from main loop
@@ -338,7 +338,7 @@ class c_tunserver : public c_galaxy_node {
 		 * @throw std::invalid_argument
 		 * Exception safety: strong exception guarantee
 		 */
-		std::pair<string,int> parse_ip_string(const std::string &ip_string);
+		std::pair<std::string,int> parse_ip_string(const std::string &ip_string);
 
 		/**
 		 * @brief check_packet_destination_address
@@ -382,7 +382,7 @@ class c_tunserver : public c_galaxy_node {
 		std::vector<t_ipv6_protocol_type> m_supported_ip_protocols;
 
 		const bool m_option_insecure_cap; ///< should we do insecure cap (e.g. do NOT drop the capabilities); tests/debug
-		t_peering_reference parse_peer_simplestring(const string& simple);
+		t_peering_reference parse_peer_simplestring(const std::string& simple);
 		void exit_tunserver();
 };
 

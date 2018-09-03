@@ -28,8 +28,9 @@
 
 namespace antinet_crypto {
 
+using namespace std;
+using namespace stdplus;
 using sodiumpp::locked_string;
-
 
 t_crypto_system_type c_multikeys_pub::get_system_type() const { return e_crypto_system_type_multikey_pub; }
 

@@ -279,13 +279,13 @@ class c_stream final /* because strange ctor init list functions */
 		typedef sodiumpp::unboxer< t_crypto_nonce > t_unboxer;
 
 		// Objects to use the stream:
-		unique_ptr< t_boxer > m_boxer;
-		unique_ptr< t_unboxer > m_unboxer;
+		std::unique_ptr< t_boxer > m_boxer;
+		std::unique_ptr< t_unboxer > m_unboxer;
 
-		string m_nicename; ///< my nice name for logging/debugging
+		std::string m_nicename; ///< my nice name for logging/debugging
 
 	public:
-		c_stream(bool side_initiator, const string& nicename);
+		c_stream(bool side_initiator, const std::string& nicename);
 		std::string debug_this() const;
 
 		void exchange_start(const c_multikeys_PAIR & ID_self,  const c_multikeys_pub & ID_them,
@@ -296,16 +296,16 @@ class c_stream final /* because strange ctor init list functions */
 
 		///! generate and return our full packetstarter
 		///!
-		string generate_packetstart(c_stream & stream_to_encrypt_with) const;
+		std::string generate_packetstart(c_stream & stream_to_encrypt_with) const;
 
 		///! parse received packetstart and get IDe (the next ID to start next stream)
-		string parse_packetstart_kexasym(const string & data) const; ///< parse received packetstart and get kexasym part
+		std::string parse_packetstart_kexasym(const std::string & data) const; ///< parse received packetstart and get kexasym part
 		///! parse received packetstart and get IDe (the next ID to start next stream)
-		string parse_packetstart_IDe(const string & data) const;
+		std::string parse_packetstart_IDe(const std::string & data) const;
 
 		void set_packetstart_IDe_from(const c_multikeys_PAIR & keypair);
 
-		unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
+		std::unique_ptr<c_multikeys_PAIR> create_IDe(bool will_asymkex);
 
 		std::string box(const std::string & msg);
 		std::string box(const std::string & msg, t_crypto_nonce & nonce); ///< box this cleartext, and OUT the nonce that was used
@@ -339,17 +339,17 @@ class c_crypto_tunnel {
 
 		bool m_side_initiator; ///< am I initiator of the dialog (or respondent)
 
-		unique_ptr<c_multikeys_PAIR> m_IDe; ///< our ephemeral ID (that will create KCTf)
+		std::unique_ptr<c_multikeys_PAIR> m_IDe; ///< our ephemeral ID (that will create KCTf)
 
-		unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
-		unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
+		std::unique_ptr<c_stream> m_stream_crypto_ab; ///< the "ab" crypto - wit KCTab
+		std::unique_ptr<c_stream> m_stream_crypto_final; ///< the ephemeral crypto - with KCTf
 
-		string m_nicename; ///< my nice name for logging/debugging
+		std::string m_nicename; ///< my nice name for logging/debugging
 
 	public:
-		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them, const string& nicename);
+		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them, const std::string& nicename);
 		c_crypto_tunnel(const c_multikeys_PAIR & ID_self, const c_multikeys_pub & ID_them,
-			const std::string & packetstart, const string& nicename );
+			const std::string & packetstart, const std::string& nicename );
 
 		virtual ~c_crypto_tunnel()=default;
 

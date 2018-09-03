@@ -1,5 +1,6 @@
 #include "mock_posix_stream_descriptor.hpp"
 #include "../tuntap/linux/c_tuntap_linux_obj.hpp"
+#include <utils/unused.hpp>
 
 bool mock::mock_posix_stream_descriptor::s_good_open = true;
 

@@ -1,11 +1,11 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 #include "c_tun_device.hpp"
-#include "libs0.hpp"
 #include "tnetdbg.hpp"
 #include "../depends/cjdns-code/syserr.h"
 #include "../depends/cjdns-code/NetPlatform.h"
 #include <syserror_use.hpp>
 #include "platform.hpp"
+#include <cassert>
 
 #include <cstring>
 
@@ -31,14 +31,11 @@ int c_tun_device::get_tun_fd() const {
 
 #ifdef __linux__
 
-#include <cassert>
 #include <fcntl.h>
 #include <linux/if_tun.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include "tnetdbg.hpp"
-#include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 
 c_tun_device_linux::c_tun_device_linux()
@@ -123,7 +120,6 @@ size_t c_tun_device_linux::write_to_tun(void *buf, size_t count) { // TODO throw
 
 #include "tnetdbg.hpp"
 #include <boost/bind.hpp>
-#include <cassert>
 #include <ifdef.h>
 #include <io.h>
 #ifndef NTSTATUS
@@ -530,7 +526,6 @@ void c_tun_device_windows::hkey_wrapper::close() {
 // _win32 || __cygwin__
 
 #elif defined(__MACH__)
-#include "../depends/cjdns-code/NetPlatform.h"
 #include "cpputils.hpp"
 #include <sys/kern_control.h>
 #include <sys/sys_domain.h>

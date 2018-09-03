@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <libs0.hpp>
 #include <cable/kind.hpp>
+#include <memory>
 
 int get_default_galaxy_port();
 
@@ -20,7 +20,7 @@ class c_cable_base_addr {
 	public:
 		c_cable_base_addr() = default; // for enable default ctor in child classes
 		virtual ~c_cable_base_addr()=default;
-		virtual unique_ptr<c_cable_base_addr> clone() const = 0; ///< polymorphic clone
+		virtual std::unique_ptr<c_cable_base_addr> clone() const = 0; ///< polymorphic clone
 
 		virtual void print(std::ostream & ostr) const = 0; ///< displays human readable form of this address
 
@@ -29,7 +29,7 @@ class c_cable_base_addr {
 		bool operator<(const c_cable_base_addr &other) const;
 
 		/// Factory - from parameter like "auto:1.2.3.4", "udp:5.6.7.8:9040", and returns child class e.g. c_cable_udp_addr. Throws if invalid.
-		static unique_ptr<c_cable_base_addr> cable_make_addr(const string & str);
+		static std::unique_ptr<c_cable_base_addr> cable_make_addr(const std::string & str);
 
 		t_cable_kind get_kind() const;
 

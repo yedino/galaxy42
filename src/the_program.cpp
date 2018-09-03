@@ -15,6 +15,8 @@
 
 #include "bitcoin_node_cli.hpp"
 
+using namespace std;
+
 void c_the_program::take_args(int argc, const char **argv) {
 	if (argc>0) argt_exec=argv[0]; else argt_exec="";
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);

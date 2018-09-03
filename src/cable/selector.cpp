@@ -4,7 +4,8 @@
 #include <cable/asio_ioservice_manager.hpp>
 #include <cable/kind.hpp>
 #include <cable/selector.hpp>
-#include <libs0.hpp>
+
+using namespace std;
 
 c_card_selector::c_card_selector(unique_ptr<c_cable_base_addr> && my_addr)
 : m_my_addr(std::move(my_addr))

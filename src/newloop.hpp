@@ -1,5 +1,5 @@
 
 #pragma once
 
-int newloop_main(const vector<string> & argt);
+int newloop_main(const std::vector<std::string> & argt);
 

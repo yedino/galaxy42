@@ -42,7 +42,7 @@ class c_weld final {
  */
 class c_emitqueue final {
 	public:
-		std::vector<  weak_ptr< c_weld > > m_welds; ///< the welds that I want to send
+		std::vector<  std::weak_ptr< c_weld > > m_welds; ///< the welds that I want to send
 };
 
 /**
@@ -50,7 +50,7 @@ class c_emitqueue final {
  */
 class c_bag_fragment final {
 	public:
-		weak_ptr< c_weld > m_weld;
+		std::weak_ptr< c_weld > m_weld;
 		size_t pos_begin, pos_end;
 };
 

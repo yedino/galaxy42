@@ -2,7 +2,6 @@
 
 #ifndef C_JSON_GENCONF_HPP
 #define C_JSON_GENCONF_HPP
-#include "libs1.hpp"
 #include <boost/filesystem.hpp>
 
 /**

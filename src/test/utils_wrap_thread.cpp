@@ -4,7 +4,7 @@
 #include <atomic>
 
 #include "../utils/wrap_thread.hpp"
-#include "../libs0.hpp"
+#include <tnetdbg.hpp>
 
 
 TEST(utils_wrap_thread, simple_thread_replace) {

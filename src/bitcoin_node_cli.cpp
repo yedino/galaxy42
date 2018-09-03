@@ -1,6 +1,7 @@
 #include "bitcoin_node_cli.hpp"
 #include <json.hpp>
-
+#include <tnetdbg.hpp>
+#include <utils/check.hpp>
 
 #ifdef ENABLE_LIB_CURL
 c_curl_ptr::c_curl_ptr()

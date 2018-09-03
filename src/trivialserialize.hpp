@@ -7,7 +7,9 @@
 #ifndef include_trivialserialize_hppaaa
 #define include_trivialserialize_hppaaa
 
-#include "libs1.hpp"
+#include <utils/unused.hpp>
+#include <stdplus/misc.hpp>
+#include <cassert>
 
 // yeap defines are not so nice but also remove some problems with global constants re init ordering for example
 // TODO constexpr?
@@ -118,13 +120,13 @@ class generator final {
 		 * Description: handling data structures
 		 */
 		///@{
-		void push_vector_string(const vector<string> & data); ///< Save vector<string>
+		void push_vector_string(const std::vector<std::string> & data); ///< Save vector<string>
 
 		template <typename T>
-		void push_vector_object(const vector<T> & data); ///< Save vector<T>
+		void push_vector_object(const std::vector<T> & data); ///< Save vector<T>
 
 		template <typename TKey, typename TVal>
-		void push_map_object(const map<TKey,TVal> & data); ///< Save this map
+		void push_map_object(const std::map<TKey,TVal> & data); ///< Save this map
 
 		/**
 		 * @brief Saves object T, also used by e.g. push_vector_object.
@@ -191,7 +193,7 @@ class generator final {
 template <typename T>
 void obj_serialize(const T & data, trivialserialize::generator & gen) {
 	pfp_UNUSED(data); pfp_UNUSED(gen);
-	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
+	static_assert(stdplus::templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in serialization, implement specialized template<> serialize(..) for it.");
 	assert(false);
 }
@@ -204,7 +206,7 @@ class parser; // needs the forward declaration if placed here
 template <typename T>
 T obj_deserialize(trivialserialize::parser & parser) {
 	pfp_UNUSED(parser);
-	static_assert(templated_always_false<T>, // check with idiom_error_on_instantize
+	static_assert(stdplus::templated_always_false<T>, // check with idiom_error_on_instantize
 		"To use this type in deserialization, implement specialized template<> obj_deserialize(..) for it.");
 	assert(false);
 	T ret;
@@ -223,8 +225,8 @@ template <> std::string obj_deserialize<std::string>(trivialserialize::parser & 
 template <> void obj_serialize(const char & data, trivialserialize::generator & gen);
 template <> char obj_deserialize<char>(trivialserialize::parser & parser);
 
-template <> void obj_serialize(const std::vector<string> & data, trivialserialize::generator & gen);
-template <> std::vector<std::string> obj_deserialize<std::vector<string>>(trivialserialize::parser & parser);
+template <> void obj_serialize(const std::vector<std::string> & data, trivialserialize::generator & gen);
+template <> std::vector<std::string> obj_deserialize<std::vector<std::string>>(trivialserialize::parser & parser);
 
 /// @} //  trivialserialize_serializefreefunctions_standardtypes
 
@@ -234,7 +236,7 @@ template <typename T> void generator::push_object(const T & data) {
 	obj_serialize(data, *this); // this should use the specialized user-provided function
 }
 
-template <typename T> void generator::push_vector_object(const vector<T> & data) {
+template <typename T> void generator::push_vector_object(const std::vector<T> & data) {
 	const auto size = data.size();
 	assert(size <= std::numeric_limits<uint64_t>::max());
 	push_integer_uvarint( data.size() );
@@ -242,7 +244,7 @@ template <typename T> void generator::push_vector_object(const vector<T> & data)
 }
 
 template <typename TKey, typename TVal>
-void generator::push_map_object(const map<TKey,TVal> & data) {
+void generator::push_map_object(const std::map<TKey,TVal> & data) {
 	push_integer_uvarint( data.size() );
 	for(const auto & pair : data) {
 		push_object(pair.first);
@@ -380,13 +382,13 @@ class parser final {
 		 * Description: handling data structures
 		 */
 		///@{
-		vector<string> pop_vector_string(); ///< Decode a vector<string> object saved with push_vector_string
+		std::vector<std::string> pop_vector_string(); ///< Decode a vector<string> object saved with push_vector_string
 
 		template <typename T>
-		vector<T> pop_vector_object(); ///< Decode vector<T> saved with push_vector_object<T>
+		std::vector<T> pop_vector_object(); ///< Decode vector<T> saved with push_vector_object<T>
 
 		template <typename TKey, typename TVal>
-		map<TKey,TVal> pop_map_object(); ///< Decode data saved with matchig push_map_object
+		std::map<TKey,TVal> pop_map_object(); ///< Decode data saved with matchig push_map_object
 
 
 		/**
@@ -409,8 +411,8 @@ T parser::pop_object() {
 }
 
 template <typename T>
-vector<T> parser::pop_vector_object() {
-	vector<T> ret;
+std::vector<T> parser::pop_vector_object() {
+	std::vector<T> ret;
 	const auto size = pop_integer_uvarint();
 	assert(size <= std::numeric_limits<uint64_t>::max());
 	for (std::remove_cv<decltype(size)>::type i = 0; i<size; ++i) ret.push_back( pop_object<T>() );
@@ -418,11 +420,11 @@ vector<T> parser::pop_vector_object() {
 }
 
 template <typename TKey, typename TVal>
-map<TKey,TVal> parser::pop_map_object() {
+std::map<TKey,TVal> parser::pop_map_object() {
 	bool dbg=0;
 	if (dbg) pfp_dbg1("Reading map");
 
-	map<TKey,TVal> ret;
+	std::map<TKey,TVal> ret;
 	const auto size = pop_integer_uvarint();
 	if (dbg) pfp_dbg1("Reading map size="<<size);
 	assert(size <= std::numeric_limits<uint64_t>::max());

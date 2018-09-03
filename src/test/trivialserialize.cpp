@@ -6,7 +6,7 @@
 #include <exception>
 
 using namespace trivialserialize;
-
+using namespace std;
 
 void uvarint_for_i(uint64_t i) {
 	generator gen(1);

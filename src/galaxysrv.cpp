@@ -11,8 +11,11 @@
 #include "cable/simulation/world.hpp"
 #include <cable/selector.hpp>
 
-#include "libs0.hpp"
 #include "cable/kind.hpp"
+
+#include "datastore.hpp"
+#include "generate_crypto.hpp"
+#include "ui.hpp"
 
 #include "tuntap/base/tuntap_base.hpp"
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
@@ -25,9 +28,11 @@
 #include <mutex.hpp>
 
 #include <utils/privileges.hpp> // to drop/verify before main loop
+#include <strings_utils_simple.hpp>
 
 // constexpr int cfg_jobs_tuntap_threads = 4;
 
+using namespace std;
 
 void asiotest();
 

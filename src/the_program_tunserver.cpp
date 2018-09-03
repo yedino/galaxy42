@@ -22,6 +22,8 @@
 #include "httpdbg/httpdbg-server.hpp"
 #endif
 
+using namespace std;
+
 void c_the_program_tunserver::options_create_desc() {
 	PROGRAM_SECTION_TITLE;
 		namespace po = boost::program_options;

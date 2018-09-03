@@ -5,7 +5,10 @@
 #include <utils/misc.hpp> // <- we're testing this
 #include "tnetdbg.hpp"
 #include <utility>
+#include <stdplus/misc.hpp>
 #include "my_tests_lib.hpp"
+
+using namespace stdplus;
 
 // ===========================================================================================================
 // example of enum-class

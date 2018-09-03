@@ -1,8 +1,9 @@
 
-#include <libs0.hpp>
 #include <cable/kind.hpp>
+#include <tnetdbg.hpp>
 
 std::string to_string(const t_cable_kind & obj) {
+	using namespace std::string_literals;
 	switch (obj) {
 		case (t_cable_kind::kind_simul):  return "simul"s;  break;
 		case (t_cable_kind::kind_shm):  return "shm"s;  break;

@@ -34,7 +34,7 @@ c_peering::c_peering(const t_peering_reference & ref)
 	,m_last_ping_time(std::chrono::steady_clock::now())
 { }
 
-void c_peering::print(ostream & ostr) const {
+void c_peering::print(std::ostream & ostr) const {
 	ostr << "peering{";
 	ostr << " peering-addr=" << m_peering_addr;
 	ostr << " hip=" << m_haship_addr;
@@ -47,7 +47,7 @@ void c_peering::send_data(const char * data, size_t data_size) {
 	pfp_throw_error( std::runtime_error("Used abstract send_data() that does nothing") );
 }
 
-ostream & operator<<(ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
+std::ostream & operator<<(std::ostream & ostr, const c_peering & obj) {	obj.print(ostr); return ostr; }
 
 c_haship_addr c_peering::get_hip() const { return m_haship_addr; }
 c_haship_pubkey * c_peering::get_pub() const { return m_pubkey.get(); }
@@ -119,7 +119,7 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 
 	trivialserialize::generator gen(data_size + 50);
 	gen.push_byte_u( c_protocol::current_version );
-	gen.push_byte_u( enum_to_int_safe<unsigned char>(c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) );
+	gen.push_byte_u( stdplus::enum_to_int_safe<unsigned char>(c_protocol::t_proto_cmd::e_proto_cmd_tunneled_data) );
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(src_hip) );
 	gen.push_bytes_n( g_ipv6_rfc::length_of_addr , to_binary_string(dst_hip) );
 	gen.push_byte_u( ttl );
@@ -164,15 +164,15 @@ void c_peering_udp::send_data_udp(const char * data, size_t data_size, int udp_s
 	// TODO asserts!!!
 */
 
-	string protomsg = gen.str(); // TODO view_string
+	std::string protomsg = gen.str(); // TODO view_string
 	this->send_data_RAW_udp(protomsg.c_str(), protomsg.size(), udp_socket);
 }
 
 void c_peering_udp::send_data_udp_cmd(c_protocol::t_proto_cmd cmd, const string_as_bin & bin, int udp_socket) {
-	pfp_info("Send to peer (COMMAND): command="<<enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
+	pfp_info("Send to peer (COMMAND): command="<<stdplus::enum_to_int(cmd)<<" data: " << string_as_dbg(bin).get() ); // TODO .get
 	string_as_bin raw;
     raw.bytes += c_protocol::current_version;
-    raw.bytes += enum_to_int_safe<unsigned char>(cmd);
+    raw.bytes += stdplus::enum_to_int_safe<unsigned char>(cmd);
 	raw.bytes += bin.bytes;
 	this->send_data_RAW_udp(raw.bytes.c_str(), raw.bytes.size(), udp_socket);
 }
@@ -194,7 +194,7 @@ void c_peering_udp::send_data_RAW_udp(const char * data, size_t data_size, int u
 		break;
 		default: {
 			std::ostringstream oss; oss << m_peering_addr; // TODO
-			pfp_throw_error( std::runtime_error(string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
+			pfp_throw_error( std::runtime_error(std::string("Invalid IP type (when trying to send RAW udp): ") + oss.str()) );
 		}
 	}
 	//#endif

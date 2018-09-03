@@ -2,7 +2,8 @@
 
 
 #include "ui.hpp"
-
+#include "mo_reader.hpp"
+#include "tnetdbg.hpp"
 
 
 using namespace std;

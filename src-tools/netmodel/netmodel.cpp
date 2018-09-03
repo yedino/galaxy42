@@ -35,6 +35,9 @@ Possible ASIO bug (or we did something wrong): see https://svn.boost.org/trac10/
 
 #include <tuntap/tuntap-all.hpp>
 #include "stdplus/eint.hpp"
+#include <mutex.hpp>
+
+using namespace std;
 
 #ifndef ANTINET_PART_OF_YEDINO
 
@@ -1234,7 +1237,7 @@ void asiotest_udpserv(std::vector<std::string> options) {
 	vector<std::thread> ios_wire_thread;
 	for (int ios_nr = 0; ios_nr < cfg_num_ios; ++ios_nr) {
 		for (int ios_thread=0; ios_thread<cfg_num_thread_per_ios; ++ios_thread) {
-			int cpu_nr = container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
+			int cpu_nr = stdplus::container_get_or_default( cfg_wire_ios_cpu , ios_thread , -1 );
 			pfp_goal("WIRE: start worker: ios_nr=" << ios_nr << " ios_thread=" << ios_thread
 				<< " cpu=" << cpu_nr << " --- cpu ---");
 

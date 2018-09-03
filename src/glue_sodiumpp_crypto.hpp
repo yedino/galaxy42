@@ -7,7 +7,6 @@
 #include "crypto/crypto.hpp"
 
 #include <sodiumpp/sodiumpp.h>
-#include "libs0.hpp"
 #include "strings_utils.hpp"
 
 namespace antinet_crypto {
@@ -41,7 +40,7 @@ std::string show_nice_nonce(const sodiumpp::nonce<sequentialbytes> & thenonce) {
 		ev = (ev<<8) + static_cast<unsigned char>(str.at(i));
 	}
 
-	ostringstream oss;
+	std::ostringstream oss;
 	if (num_zero>0) {
 		oss << "(0*" << num_zero << ")...";
 	}

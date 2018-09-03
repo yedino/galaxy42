@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <stdplus/tab.hpp>
 
-class c_tun_device_windows;
-
 /**
  * @brief The c_ndp class
  * This Class sends NDP (Neighbor Discovery Protocol) packets

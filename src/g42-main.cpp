@@ -13,16 +13,16 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm);
 
 namespace developer_tests {
 
-string make_pubkey_for_peer_nr(int peer_nr) {
-	string peer_pub = string("4a4b4c") + string("4") + string(1, char('0' + peer_nr)  );
+std::string make_pubkey_for_peer_nr(int peer_nr) {
+	std::string peer_pub = std::string("4a4b4c") + std::string("4") + std::string(1, char('0' + peer_nr)  );
 	return peer_pub;
 }
 
 // list of peers that exist in our test-world:
 struct t_peer_cmdline_ref {
-	string ip;
-	string pubkey;
-	string privkey; ///< just in the test world. here we have knowledge of peer's secret key
+	std::string ip;
+	std::string pubkey;
+	std::string privkey; ///< just in the test world. here we have knowledge of peer's secret key
 };
 
 bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
@@ -34,9 +34,9 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 
 	int peer_nr = node_nr==1 ? 2 : 1;
 
-	string peer_pub = make_pubkey_for_peer_nr( peer_nr );
+	std::string peer_pub = make_pubkey_for_peer_nr( peer_nr );
 	// each connect to node .1., except the node 1 that connects to .2."
-	string peer_ip = string("192.168.") + std::to_string( peer_nr  ) + string(".62");
+	std::string peer_ip = std::string("192.168.") + std::to_string( peer_nr  ) + std::string(".62");
 
 //	pfp_mark("Developer: adding peer with arguments: ip=" << peer_ip << " pub=" << peer_pub );
         pfp_mark(mo_file_reader::gettext("L_devel_adding_peer_with_args") << "ip=" << peer_ip << " pub=" << peer_pub );
@@ -50,12 +50,12 @@ bool wip_galaxy_route_star(boost::program_options::variables_map & argm) {
 }
 
 void add_program_option_vector_strings(boost::program_options::variables_map & argm,
-	const string & name , const string & value_to_append)
+	const std::string & name , const std::string & value_to_append)
 {
 	namespace po = boost::program_options;
-	vector<string> old_peer;
+	std::vector<std::string> old_peer;
 	try {
-		old_peer = argm[name].as<vector<string>>();
+		old_peer = argm[name].as<std::vector<std::string>>();
 		old_peer.push_back(value_to_append);
 		argm.at(name) = po::variable_value( old_peer , false );
 	} catch(boost::bad_any_cast) {
@@ -63,7 +63,7 @@ void add_program_option_vector_strings(boost::program_options::variables_map & a
 		argm.insert( std::make_pair(name , po::variable_value( old_peer , false )) );
 	}
 //	pfp_info("program options: added to option '" << name << "' - now size: " << argm.at(name).as<vector<string>>().size() );
-        pfp_info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<vector<string>>().size() );
+        pfp_info(mo_file_reader::gettext("L_program_option_added") << name << mo_file_reader::gettext("L_option_now_size") << argm.at(name).as<std::vector<std::string>>().size() );
 
 }
 
@@ -83,7 +83,7 @@ bool demo_sodiumpp_nonce_bug() {
 	{
 		pfp_warn("test");
 
-				string nonce_used_raw(24,0);
+				std::string nonce_used_raw(24,0);
 				nonce_used_raw.at(23)=6;
 
 				pfp_dbg1("nonce_used_raw="<<to_debug(nonce_used_raw));
@@ -110,15 +110,15 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
 
 	// --- define the test world ---
 	// for given peer-number - the properties of said peer as seen by us (pubkey, ip - things given on the command line):
-	map< int , std::string > peer_cmd_map = {
+	std::map< int , std::string > peer_cmd_map = {
 		{ 1 , "192.168.1.62:9042-fd42:9fd1:ce03:9edf:1d7e:2257:b651:d89f" } ,
 		{ 2 , "192.168.2.62:9042-fd42:10a9:4318:509b:80ab:8042:6275:609b" } ,
 		{ 3 , "192.168.3.62:9042-fd42:5516:34c7:9302:890f:0a2d:5586:79ee" } ,
 	};
 
 	// list of connections in our test-world:
-	map< int , vector<int> > peer_to_peer; // for given peer that we will create: list of his peer-number(s) that he peers into
-	peer_to_peer[1] = vector<int>{ 2 , 3 };
+	std::map< int , std::vector<int> > peer_to_peer; // for given peer that we will create: list of his peer-number(s) that he peers into
+	peer_to_peer[1] = std::vector<int>{ 2 , 3 };
 	/*
 	peer_to_peer[2] = vector<int>{ 4 , 5 };
 	peer_to_peer[3] = vector<int>{ 6 , 7 };
@@ -161,19 +161,19 @@ bool wip_galaxy_route_doublestar(boost::program_options::variables_map & argm) {
  * @TODO just loads file from current PWD, should instead load from program's starting pwd and also search user home dir.
  * @return Name of the demo to run, as configured in demo.conf -or- string "default" if can not load it.
 */
-string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
-	string ret="default";
+std::string demoname_load_conf(std::string democonf_fn = "config/demo.conf") {
+	std::string ret="default";
 	try {
-		ifstream democonf_file(democonf_fn);
+		std::ifstream democonf_file(democonf_fn);
 //		if (! democonf_file.good()) { std::cerr<<"Not loading demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
                 if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_not_load_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
-		string line="";
+		std::string line="";
 		getline(democonf_file,line);
 //		if (! democonf_file.good()) { std::cerr<<"Failure in parsing demo user config file ("<<democonf_fn<<")" << std::endl; return ret; }
                 if (! democonf_file.good()) { pfp_fact( mo_file_reader::gettext("L_faliture_parsing_demo_usr_conf_file")<<democonf_fn<<")" ); return ret; }
 
-		ret = line.substr( string("demo=").size() );
+		ret = line.substr( std::string("demo=").size() );
 	} catch(...) { }
 //	std::cerr<<"Loaded demo user config file ("<<democonf_fn<<") with demo option:" << ret << std::endl;
         pfp_fact( mo_file_reader::gettext("L_loaded_demo_usr_conf_file") <<democonf_fn << mo_file_reader::gettext("L_with_demo_options") << ret );
@@ -209,8 +209,8 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 //	std::cerr << "Running in developer/demo mode." << std::endl;
         pfp_fact( mo_file_reader::gettext("L_devel_demo_running_mode") << std::endl );
 
-	const string demoname_default = g_demoname_default;
-	auto demoname = argm["develdemo"].as<string>();
+	const std::string demoname_default = g_demoname_default;
+	auto demoname = argm["develdemo"].as<std::string>();
 	pfp_note("Demoname (from program options command line) is:" << demoname);
 
 	namespace po = boost::program_options;
@@ -238,12 +238,12 @@ bool run_mode_developer_main(boost::program_options::variables_map & argm) {
 		return false;
 	}
 
-	const string demoname_loaded = demoname_load_conf();
+	const std::string demoname_loaded = demoname_load_conf();
 	if (demoname_loaded != "default") demoname = demoname_loaded;
 	if (demoname=="hardcoded") demoname = demoname_default;
 
 	pfp_note("Demo name selected: [" << demoname << "]");
-	pfp_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << endl
+	pfp_fact( std::string(70,'=')<<"\n" << "Demo: " << demoname << std::endl
 		<< std::string(70,'=')<<"\n" );
 
 	if (demoname=="lang_optional") { test_lang_optional();  return false; }
@@ -305,8 +305,8 @@ void main_print_flavour() {
 int main(int argc, const char * const * argv) { // the main() function
 	// parse early options:
 	// this is done very early, we do not use console, nor boost program_options etc
-	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
-	vector<string> argt; // args (without exec name)
+	std::string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
+	std::vector<std::string> argt; // args (without exec name)
 	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
 	bool early_debug = contains_value(argt, "--d");
 
@@ -349,13 +349,13 @@ int main(int argc, const char * const * argv) { // the main() function
 			return t_program_type::e_program_type_tunserver;
 	}();
 
-	unique_ptr<c_the_program> the_program = nullptr;
+	std::unique_ptr<c_the_program> the_program = nullptr;
 	switch (program_type) {
 		case t_program_type::e_program_type_tunserver:
-			the_program = make_unique<c_the_program_tunserver>();
+			the_program = std::make_unique<c_the_program_tunserver>();
 		break;
 		case t_program_type::e_program_type_newloop:
-			the_program = make_unique<c_the_program_newloop>();
+			the_program = std::make_unique<c_the_program_newloop>();
 		break;
 		default: break;
 	}

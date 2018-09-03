@@ -2,7 +2,11 @@
 
 
 #include "crypto_basic.hpp"
+#include <cassert>
+#include <tnetdbg.hpp>
+#include <utils/unused.hpp>
 
+using namespace std;
 
 namespace antinet_crypto {
 

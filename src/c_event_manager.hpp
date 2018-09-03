@@ -2,8 +2,8 @@
 #define C_EVENT_MANAGER_HPP
 
 //TODO (da2ce7) CIRCULAR HEADER INCLUDE
-#include "c_tun_device.hpp"
 #include "c_udp_wrapper.hpp"
+#include <functional>
 
 class c_event_manager {
 	public:
@@ -47,7 +47,6 @@ class c_event_manager_linux final : public c_event_manager {
 	#endif
 #endif
 
-#include <functional>
 #if defined(_WIN32) || defined(__CYGWIN__)
 class c_tun_device_windows;
 #elif defined(__MACH__)

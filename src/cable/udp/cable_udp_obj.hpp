@@ -6,7 +6,6 @@
 #include <boost/asio.hpp>
 #include <list>
 #include <mutex>
-#include "libs0.hpp"
 #include "../asiocable.hpp"
 #include "../asio_ioservice_manager.hpp"
 #include "../../test/mock_boost_udp_socket.hpp"
@@ -14,6 +13,8 @@
 
 #include <cable/selector.hpp>
 #include <cable/udp/cable_udp_addr.hpp>
+#include <platform.hpp>
+#include <mutex.hpp>
 
 enum class t_multisocket_kind {
 	one_rw=1, ///< one socket: for both read and write (then we do not need to e.g. do SO_REUSEPORT)
@@ -43,7 +44,7 @@ class c_cable_udp final : public c_asiocable {
 		 * to enforce port, or a specific one to enforce entire source address.
 		 * @throws std::runtime_error on failure
 		 */
-		c_cable_udp(shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr);
+		c_cable_udp(std::shared_ptr<c_asioservice_manager_base> & iomanager, const c_card_selector_base &source_addr);
 
 		void send_to(const c_cable_base_addr & dest, const unsigned char *data, size_t size) override;
 		void send_to(const c_cable_base_addr & dest, const t_asio_buffers_send & buffers) override;

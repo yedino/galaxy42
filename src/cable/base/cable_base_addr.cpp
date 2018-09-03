@@ -1,8 +1,11 @@
 
-#include "libs1.hpp"
 #include "cable/base/cable_base_addr.hpp"
 #include "cable/udp/cable_udp_addr.hpp"
 #include "cable/shm/cable_shm_addr.hpp"
+#include <strings_utils_simple.hpp>
+#include <utils/check.hpp>
+
+using namespace std;
 
 c_cable_base_addr::c_cable_base_addr(t_cable_kind kind)
 	: m_kind(kind)
@@ -13,7 +16,7 @@ std::ostream & operator<<(std::ostream & ostr , c_cable_base_addr const & obj) {
 	return ostr;
 }
 
-unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const string & str) {
+std::unique_ptr<c_cable_base_addr> c_cable_base_addr::cable_make_addr(const std::string & str) {
 	try{
 		size_t pos1 = str.find(':');
 		if (pos1 == string::npos) { // try if is udp (format 192.166.218.58)

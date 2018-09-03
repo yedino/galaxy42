@@ -5,7 +5,7 @@
 #ifndef include_counter_hpp
 #define include_counter_hpp
 
-#include "libs1.hpp"
+#include <iosfwd>
 
 class c_counter {
 	public:

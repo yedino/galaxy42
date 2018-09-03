@@ -1,9 +1,9 @@
 #ifndef C_UDP_WRAPPER_HPP
 #define C_UDP_WRAPPER_HPP
 
+#include <cstddef>
 
-#include "c_ip46_addr.hpp" // TODO make portable
-#include "c_event_manager.hpp"
+class c_ip46_addr;
 
 // [[deprecated]] instead use cables, cable/udp/* . Still here for the old-loop code
 class c_udp_wrapper {

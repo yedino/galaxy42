@@ -9,11 +9,11 @@
 #include "formats_ip.hpp"
 #include "c_ip46_addr.hpp"
 #include "haship.hpp"
-#include "protocol.hpp"
 
 #include "crypto/crypto_basic.hpp"
 #include "c_udp_wrapper.hpp"
 #include "httpdbg/peering_stats.hpp"
+#include "protocol.hpp"
 
 // TODO (later) make normal virtual functions (move UDP properties into class etc) once tests are done.
 
@@ -35,7 +35,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		virtual void send_data(const char * data, size_t data_size);
 		virtual ~c_peering()=default;
 
-		virtual void print(ostream & ostr) const;
+		virtual void print(std::ostream & ostr) const;
 
 		virtual c_haship_addr get_hip() const;
 		virtual c_haship_pubkey * get_pub() const; ///< gets "reference" to current pubkey; will be invlidated, use immediatelly
@@ -57,7 +57,7 @@ class c_peering { ///< An (mostly established) connection to peer
 	protected:
 		c_ip46_addr	m_peering_addr; ///< peer physical address in socket format
 		c_haship_addr m_haship_addr; ///< peer haship address
-		unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
+		std::unique_ptr<c_haship_pubkey> m_pubkey; ///< his pubkey (when we know it)
 
 		std::atomic<long int> m_limit_points; // decrement when send packet to this peer
 		c_transmission_stats m_peering_stats;
@@ -65,7 +65,7 @@ class c_peering { ///< An (mostly established) connection to peer
 		std::chrono::steady_clock::time_point m_last_ping_time;
 };
 
-ostream & operator<<(ostream & ostr, const c_peering & obj);
+std::ostream & operator<<(std::ostream & ostr, const c_peering & obj);
 
 class c_peering_udp : public c_peering { ///< An established connection to UDP peer
 	public:

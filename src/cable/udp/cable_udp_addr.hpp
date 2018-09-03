@@ -13,7 +13,7 @@ class c_cable_udp_addr final : public c_cable_base_addr {
 		c_cable_udp_addr(const t_addr &endpoint);
 		c_cable_udp_addr(const std::string &ip_string); ///< Converts string like "100.200.50.50:32000"
 
-		virtual unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
+		virtual std::unique_ptr<c_cable_base_addr> clone() const override; ///< polymorphic clone
 
 		void print(std::ostream & ostr) const override;
 

@@ -6,6 +6,7 @@
 #include "gmock/gmock.h"
 #include "../tuntap/linux/c_tuntap_linux_obj.hpp"
 #include <boost/asio.hpp>
+#include <utils/unused.hpp>
 
 using testing::Return;
 using testing::_;

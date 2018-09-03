@@ -3,7 +3,7 @@
 
 #include "galaxy_debug.hpp"
 
-#include "libs0.hpp"
+#include <tnetdbg.hpp>
 #include "strings_utils.hpp"
 
 // #include "glue_lockedstring_trivialserialize.hpp
@@ -18,7 +18,7 @@ namespace unittest {
 #include "strings_utils.hpp"
 
 
-void test_debug1_a_string(const string & input) {
+void test_debug1_a_string(const std::string & input) {
 	std::string s( input );
 	sodiumpp::locked_string sl(s);
 

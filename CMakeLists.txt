@@ -500,11 +500,14 @@ endif ()
 ######################################################################
 
 ########################### TARGETS ###########################
-add_library(apigalaxy ${SOURCES_API_GALAXY})
-
-add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_library(apigalaxy ${SOURCES_API_GALAXY} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 if (NOT MSVC) #TODO
-	cotire(tunserver.elf)
+	cotire(apigalaxy)
+endif()
+
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER})
+if (NOT MSVC) #TODO
+#	cotire(tunserver.elf)
 endif()
 
 set(LIBS_COMMON
@@ -526,7 +529,7 @@ target_link_libraries(tunserver.elf
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
 
-add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+add_executable(unittests.elf ${TEST_SOURCES} ${SOURCES_GROUP_TUNSERVER})
 target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
 target_link_libraries(unittests.elf
 	${LIBS_COMMON}
@@ -542,7 +545,7 @@ target_link_libraries(unittests.elf
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
-add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER})
 target_link_libraries(performancetests.elf
 	${LIBS_COMMON})
 

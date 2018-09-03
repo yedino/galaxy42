@@ -1,8 +1,9 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
-#include "../libs0.hpp"
+#include <regex>
 #include "gtest/gtest.h"
 #include "../utils/time_utils.hpp"
+#include <tnetdbg.hpp>
 
 using namespace time_utils;
 

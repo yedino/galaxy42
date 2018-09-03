@@ -3,8 +3,9 @@
 #include "gtest/gtest.h"
 #include <boost/filesystem.hpp>
 #include "../c_ip46_addr.hpp"
-#include <libs0.hpp>
+#include <tnetdbg.hpp>
 
+using namespace std;
 
 TEST(c_ip46_addr, compare_same) {
 	c_ip46_addr addr1a( "192.168.1.2" , 9042 );

@@ -2,6 +2,10 @@
 
 #include "datastore.hpp"
 #include "text_ui.hpp"
+#include <stdplus/misc.hpp>
+#include <tnetdbg.hpp>
+
+using namespace stdplus;
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#include <windows.h>
