@@ -78,10 +78,9 @@ void MainWindow::setDebugInfo(const QString &str)
 void MainWindow::startNewCrpcConnection( const QString &host,uint port )//!@todo move to statusForm
 {
     m_cmd_exec = new commandExecutor( this ) ;
+    m_cmd_exec->startConnect( QHostAddress( host ), port );
     m_sender = new CommandSender( m_cmd_exec,this );
     m_cmd_exec->setSender( m_sender );
-    m_cmd_exec->startConnect( QHostAddress( host ), port );
-    m_sender->sendCommand( CommandSender::orderType::GETNAME );
 }
 
 std::shared_ptr<MainWindow> MainWindow::create_shared_ptr() {
