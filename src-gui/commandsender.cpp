@@ -22,6 +22,7 @@ void CommandSender::onGetName( const QString& client_name )
     m_client_name = client_name;
     m_counter.setRpcName( m_client_name );
     m_wait_name_flag = false;
+    sendCommand( CommandSender::orderType::GET_GALAXY_IPV6 );
 }
 
 std::shared_ptr<order> CommandSender::getOrder( const QString &rpc_num )
@@ -87,6 +88,9 @@ std::shared_ptr<order> CommandSender::prepareCommand( CommandSender::orderType t
         break;
     case orderType::GET_STATUS:
         ord = std::make_shared<statusOrder>(m_counter.getRpcId());
+        break;
+    case orderType::GET_GALAXY_IPV6:
+        ord = std::make_shared<getGalaxyIpV6Order>(m_counter.getRpcId());
         break;
     default:
         throw std::runtime_error ( tr( "improper number of parameters for this function" ).toStdString() );

@@ -554,6 +554,11 @@ void MainWindow::runTunTap()
     m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
 }
 
+void MainWindow::setIps(const QString &ip,const QString &vip)
+{
+	ui->quickStart->setIps( ip,vip );
+}
+
 
 void MainWindow::setBtc(uint64_t btc)
 {

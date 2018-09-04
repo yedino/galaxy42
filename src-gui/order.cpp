@@ -618,4 +618,38 @@ statusOrder::statusOrder(const RpcId& Id)
     }
 }
 
+getGalaxyIpV6Order::getGalaxyIpV6Order(const RpcId& Id) 
+{
+    try{
+        m_cmd ="get_galaxy_ipv6";
+        m_state = "ok";
+        m_id = Id.m_id;
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+    }
+}
+
+getGalaxyIpV6Order::getGalaxyIpV6Order(const std::string &json_str)
+{
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_ipv6 = j["ipv6"];
+        m_id = j["id"];
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+        return;
+    }
+}
+
+void getGalaxyIpV6Order::execute(MainWindow &main_window)
+{
+	if( m_state == "ok" ) {
+		QString ipv6 = QString::fromStdString(m_ipv6);
+		main_window.setIps( ipv6, ipv6 );
+	} else  {
+		qDebug()<< "can't get address ip V6 ";
+	}
+}
+
 

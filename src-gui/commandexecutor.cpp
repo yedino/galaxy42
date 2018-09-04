@@ -46,7 +46,7 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
     } else if( inputOrder.get_cmd() == "ban_all_peers" ) {
         ord = std::make_unique <banAllOrder>( msg );
     } else if( inputOrder.get_cmd() == "get_galaxy_ipv6" ) {
-        ord = std::make_unique <basicOrder>( msg );
+        ord = std::make_unique <getGalaxyIpV6Order>( msg );
     } else if( inputOrder.get_cmd() == "get_galaxy_new_format_reference" ) {
         ord = std::make_unique <getGalaxyOrder>( msg );
     } else if( inputOrder.get_cmd() == "hello" ) {

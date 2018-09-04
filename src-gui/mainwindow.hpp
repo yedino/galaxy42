@@ -46,6 +46,8 @@ public:
     StatusForm *GetStatusObject();
     void onPeerBanned(const QString &vip);
     void runTunTap();
+	
+	void setIps(const QString &ip,const QString &vip);
 
 public slots:
 

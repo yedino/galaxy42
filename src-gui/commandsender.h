@@ -31,7 +31,8 @@ public:
         GETNAME,
         GET_STATUS,
         PAY,
-        SET_ACCOUNT
+        SET_ACCOUNT,
+        GET_GALAXY_IPV6
     };
 
     explicit CommandSender(commandExecutor* comm_exec,QObject *parent = nullptr);
