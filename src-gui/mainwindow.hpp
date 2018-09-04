@@ -55,9 +55,6 @@ public slots:
     void showDebugPage(QByteArray &pageCode);
     void onCreateGalaxyConnection();
 
-    QStringList getLocalIps();
-    QStringList getLocalVips();
-
     void onGetMyInvitatiom(std::string );
     void errorNotification(QString err);
 

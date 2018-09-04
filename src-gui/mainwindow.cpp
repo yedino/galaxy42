@@ -30,11 +30,6 @@ MainWindow::MainWindow( QWidget *parent ) :
     ui->setupUi( this );
     ui->peerListWidget_2->setMainWindow( this );
 
-
-
-    QString ip = getLocalIps().at( 0 );
-    QString vip = getLocalVips().at( 0 ).split( '%' ).at( 0 );
-    ui->quickStart->setIps( ip,vip );
     connect( ui->quickStart,SIGNAL( connectNet( QString ) ),this,SLOT( connectToNet( QString ) ) );
     connect( ui->quickStart,SIGNAL( createNet() ),this,SLOT( createNet() ) );
     connect( ui->quickStart, SIGNAL( allowFriend( bool ) ),this,SLOT( onAllowFriend( bool ) ) );
@@ -247,43 +242,6 @@ void MainWindow::on_actionDebug_triggered() {
 void MainWindow::onCreateGalaxyConnection()
 {
 
-    QStringList list_ips = getLocalIps();
-
-    std::vector <std::string> ips;
-
-    for ( auto &it:list_ips ) {
-        ips.push_back( it.toStdString() );
-    }
-//    getGalaxyOrder ord(ips);
-//    m_cmd_exec->sendNetRequest(ord);
-
-
-//	getGalaxyOrder order
-}
-
-
-QStringList MainWindow::getLocalIps()
-{
-    QStringList ret_val;
-
-    foreach ( const QHostAddress &address, QNetworkInterface::allAddresses() ) {
-        if ( address.protocol() == QAbstractSocket::IPv4Protocol && address
-                != QHostAddress( QHostAddress::LocalHost ) && !address.isLoopback() )
-            ret_val.push_back( address.toString() );
-    }
-
-    return ret_val;
-}
-
-QStringList MainWindow::getLocalVips()
-{
-    QStringList ret_val;
-    foreach ( const QHostAddress &address, QNetworkInterface::allAddresses() ) {
-        if ( address.protocol() == QAbstractSocket::IPv6Protocol && address
-                != QHostAddress( QHostAddress::LocalHost ) && !address.isLoopback() )
-            ret_val.push_back( address.toString() );
-    }
-    return ret_val;
 }
 
 void MainWindow::onGetMyInvitatiom( std::string ipv6 )
