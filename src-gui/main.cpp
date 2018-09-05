@@ -19,9 +19,6 @@ int main( int argc, char *argv[] ) {
         QApplication a( argc, argv );
         QApplication::setWindowIcon(QIcon(":/main-icon"));
 
-//      std::shared_ptr<MainWindow> w = MainWindow::create_shared_ptr();
-//        MainWindow *w = new MainWindow(&a);
-//        w->show();
         MainWindow w;
         w.show();
 
@@ -30,6 +27,7 @@ int main( int argc, char *argv[] ) {
         qDebug() << ex.what();
         return 1;
     } catch ( ... ) {
+        qDebug() << "Unknown exception";
         return 2;
     }
 }
