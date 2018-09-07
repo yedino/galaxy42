@@ -85,12 +85,20 @@ size_t cSendmmsg_udp::recv(unsigned char * data, size_t data_size, const boost::
 }
 
 
-int main() {
-	std::vector<unsigned char> buffer(1500, '0');
+int main(int argc, const char **argv) {
+	std::cout << "multisend UDP. Usage: program dstip msgsize" << std::endl;
+	constexpr int max_msgsize = 10000; // taken from max possible MTU we expect to see
+	std::vector< std::string > args;
+	for (int i=0; i<argc; ++i) args.push_back(argv[i]);
+	std::string dst_ip = args.at(1);
+	int msgsize = atoi( args.at(2).c_str() );
+
+	std::vector<unsigned char> buffer(msgsize, '0');
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	cSendmmsg_udp udp(sockfd);
 
+	auto dst_ip_asio = boost::asio::ip::address::from_string(dst_ip);
 	while(true) {
-		udp.send(buffer.data(), buffer.size(), boost::asio::ip::address::from_string("192.168.1.66")); // TODO
+		udp.send(buffer.data(), buffer.size(), dst_ip_asio ); // TODO
 	}
 }
