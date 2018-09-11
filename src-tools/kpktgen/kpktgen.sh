@@ -107,7 +107,7 @@ do
 			break
 		fi
 	done < <(
-		arp
+		arp -n
 	)
 
 	if [[ -z "$this_mac" ]] ; then
