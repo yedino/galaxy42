@@ -50,7 +50,7 @@ void quickStartDialog::on_allowStrangersBox_clicked( bool checked )
 
 void quickStartDialog::on_wwwButton_clicked()
 {
-    QString page_address = "www.google.com";
+    QString page_address = "www.meshnet.pl";
 
     QUrl url( page_address );
     bool done =	QDesktopServices::openUrl( url );
