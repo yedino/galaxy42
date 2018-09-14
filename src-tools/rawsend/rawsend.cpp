@@ -36,12 +36,13 @@
    #define DEST_MAC5 0x62
 */
 
-#define DEST_MAC0    0xB8
-#define DEST_MAC1    0x27
-#define DEST_MAC2    0xEB
-#define DEST_MAC3    0x44
-#define DEST_MAC4    0x08
-#define DEST_MAC5    0x62
+// is set to broadcast MAC:
+#define DEST_MAC0    0xFF
+#define DEST_MAC1    0xFF
+#define DEST_MAC2    0xFF
+#define DEST_MAC3    0xFF
+#define DEST_MAC4    0xFF
+#define DEST_MAC5    0xFF
 
 #define DEFAULT_IF  "wlan0"
 #define BUF_SIZ     1024*64
@@ -136,8 +137,8 @@ int main(int argc, char *argv[])
         sendbuf[tx_len++] = ((uint8_t *)&if_mac.ifr_hwaddr.sa_data)[5];
 
         /* Ethertype field */
-        sendbuf[tx_len++] = 0x08;
-        sendbuf[tx_len++] = 0x00;
+        sendbuf[tx_len++] = 0xfc;
+        sendbuf[tx_len++] = 0x40;
 
         /*
         Packet data
@@ -182,9 +183,8 @@ int main(int argc, char *argv[])
 
         if (!flood) {
 					/* Wait specified number of microseconds
-						 1,000,000 microseconds = 1 second
 						 */
-					usleep(1000000);
+					usleep(1000000 / 10);
 				}
     }
     return 0;
