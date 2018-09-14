@@ -9,6 +9,8 @@ Date:   Fri Sep 14 19:59:43 2018 +0200
 
 ---
 
+methods up to 16 are mostly tested on Blitz (with 1 card so 2 modules, or with 2 cards diving 4 modules).
+
 method-12-r: raw, using 2-modules of X520, and 2-modules of NX3031,
 gives 19420 Gbps = 2*6060 + 2*3650 Gbps over all 4 modules, UDP 8972.
 or, 25400 Gbps = =7500*2 + 5200*2 Gbps when sending RAW Ethernet.
