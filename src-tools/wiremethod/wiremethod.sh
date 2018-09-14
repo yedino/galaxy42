@@ -12,8 +12,9 @@ function fail() {
 	exit 1
 }
 
-progs_dir="$HOME/programs/"
-cd "$progs_dir"|| fail "Can not enter $progs_dir . Build the tools from yedino and place there the binaries"
+# progs_dir="$HOME/programs/"
+# cd "$progs_dir"|| fail "Can not enter $progs_dir . Build the tools from yedino and place there the binaries"
+PATH="$PWD:$PATH"
 
 pwd
 ls
@@ -102,12 +103,15 @@ function start_sendprog() {
 }
 
 
-core_per_cpu=6
+echo -e "\n\nConfigured for computer: \nDragon\n\n\n"
+core_per_cpu=1
 msgsize=8972
-dev1="ens9f0"
-dev2="ens9f1"
-dev3="ens11f0"
-dev4="ens11f1"
+dev1=$(<"/var/local/iplab2/conn1-dev.txt")
+dev2=$(<"/var/local/iplab2/conn2-dev.txt")
+dev3=$(<"/var/local/iplab2/conn3-dev.txt")
+dev4=$(<"/var/local/iplab2/conn4-dev.txt")
+echo -e "\n\n"
+
 devtab=("$dev1" "$dev2" "$dev3" "$dev4")
 for i in $(seq 0 3) ; do
 	echo "device index $i is ${devtab[$i]}"
@@ -140,16 +144,16 @@ function apply_aff() {
 	apply_aff_show
 
 	if [[ ! -z "$dev1aff" ]] ; then
-		for irq in $(irq_of_nic "$dev1") ; do  sudo iplab2_affinity.sh "$irq" "$dev1aff" ; done
+		for irq in $(irq_of_nic "$dev1") ; do  sudo ./iplab2_affinity.sh "$irq" "$dev1aff" ; done
 	fi
 	if [[ ! -z "$dev2aff" ]] ; then
-		for irq in $(irq_of_nic "$dev2") ; do  sudo iplab2_affinity.sh "$irq" "$dev2aff" ; done
+		for irq in $(irq_of_nic "$dev2") ; do  sudo ./iplab2_affinity.sh "$irq" "$dev2aff" ; done
 	fi
 	if [[ ! -z "$dev3aff" ]] ; then
-		for irq in $(irq_of_nic "$dev3") ; do  sudo iplab2_affinity.sh "$irq" "$dev3aff" ; done
+		for irq in $(irq_of_nic "$dev3") ; do  sudo ./iplab2_affinity.sh "$irq" "$dev3aff" ; done
 	fi
 	if [[ ! -z "$dev4aff" ]] ; then
-		for irq in $(irq_of_nic "$dev4") ; do  sudo iplab2_affinity.sh "$irq" "$dev4aff" ; done
+		for irq in $(irq_of_nic "$dev4") ; do  sudo ./iplab2_affinity.sh "$irq" "$dev4aff" ; done
 	fi
 }
 
@@ -173,7 +177,19 @@ method="$1" ; shift
 sendprog="$1" ; shift
 echo "--- Method-$method sendprog=$sendprog (other options: [$*]) ---"
 
-if [[ "$method" == "16" ]] ; then
+if [[ "$method" == "20" ]] ; then
+	dev1aff=$( aff_flag 0    0 )
+	dev2aff=$( aff_flag 0    1 )
+	dev3aff=$( aff_flag 0    2 )
+	dev4aff=$( aff_flag 0    3 )
+	dev1=
+	apply_aff
+	for i in $(seq 0 2) ; do start_sendprog "conn1"  "0"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn2"  "1"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn3"  "2"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn4"  "3"  "$((5550+i))" "$@"; done
+
+elif [[ "$method" == "16" ]] ; then
 	dev1aff=$( aff_flag 0  3 4 5 )
 	dev2aff=$( aff_flag 1  3 4 5 )
 	apply_aff

@@ -9,6 +9,12 @@ Date:   Fri Sep 14 19:59:43 2018 +0200
 
 ---
 
+Dragon (new mobo)
+
+method20 a -> 27.4 Gbps / 40 = 6.75*2 + 2*6.99
+
+---
+
 methods up to 16 are mostly tested on Blitz (with 1 card so 2 modules, or with 2 cards diving 4 modules).
 
 method-12-r: raw, using 2-modules of X520, and 2-modules of NX3031,
