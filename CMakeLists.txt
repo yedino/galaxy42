@@ -370,8 +370,8 @@ include_directories(depends/CTPL)
 
 #add local backward-cpp for backtrace printing
 set(HAVE_BACKWARD 0)
-if(NOT WIN32)
-	set(Backward_DIR ${CMAKE_BINARY_DIR}/depends/backward-cpp)
+if(NOT WIN32 AND NOT APPLE)
+	set(Backward_DIR ${CMAKE_SOURCE_DIR}/depends/backward-cpp)
 	find_package(Backward)
 	if(Backward_FOUND)
 		set(HAVE_BACKWARD 1)
