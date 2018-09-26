@@ -177,7 +177,29 @@ method="$1" ; shift
 sendprog="$1" ; shift
 echo "--- Method-$method sendprog=$sendprog (other options: [$*]) ---"
 
-if [[ "$method" == "20" ]] ; then
+if [[ "$method" == "22" ]] ; then
+	dev1aff=$( aff_flag 0    0 1 2 3 4 5 )
+	dev2aff=$( aff_flag 0    0 1 2 3 4 5 )
+	dev3aff=$( aff_flag 0    0 1 2 3 4 5 )
+	dev4aff=$( aff_flag 0    0 1 2 3 4 5 )
+	apply_aff
+	for i in $(seq 0 2) ; do start_sendprog "conn1"  "0-5"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn2"  "0-5"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn3"  "0-5"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 2) ; do start_sendprog "conn4"  "0-5"  "$((5550+i))" "$@"; done
+
+elif [[ "$method" == "21" ]] ; then
+	dev1aff=$( aff_flag 0    0 )
+	dev2aff=$( aff_flag 0    1 )
+	dev3aff=$( aff_flag 0    2 )
+	dev4aff=$( aff_flag 0    3 )
+	apply_aff
+	for i in $(seq 0 1) ; do start_sendprog "conn1"  "0"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 1) ; do start_sendprog "conn2"  "1"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 1) ; do start_sendprog "conn3"  "2"  "$((5550+i))" "$@"; done
+	for i in $(seq 0 1) ; do start_sendprog "conn4"  "3"  "$((5550+i))" "$@"; done
+
+elif [[ "$method" == "20" ]] ; then
 	dev1aff=$( aff_flag 0    0 )
 	dev2aff=$( aff_flag 0    1 )
 	dev3aff=$( aff_flag 0    2 )
