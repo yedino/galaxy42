@@ -94,6 +94,7 @@ protected :
 
 };
 
+
 class pingOrder final: public order
 {
 public:
@@ -250,7 +251,7 @@ public:
 
 
 protected:
-    commandExecutor* m_executor;
+    commandExecutor* m_executor = nullptr;
     std::string m_account;
 };
 
@@ -309,6 +310,17 @@ public:
 private:
 
     int32_t m_satoshi;
+};
+
+
+class getGalaxyIpV6Order final:public order
+{
+public:
+    getGalaxyIpV6Order(const RpcId& Id);
+    getGalaxyIpV6Order(const std::string &json_str);
+    void execute(MainWindow &main_window);
+private:
+    std::string m_ipv6;
 };
 
 #endif // ORDER_HPP

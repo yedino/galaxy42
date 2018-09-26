@@ -24,3 +24,6 @@
 [submodule "depends/backward-cpp"]
 	path = depends/backward-cpp
 	url = https://github.com/bombela/backward-cpp
+[submodule "depends/libqrencode"]
+	path = depends/libqrencode
+	url = https://github.com/fukuchi/libqrencode.git

@@ -46,7 +46,7 @@ void commandExecutor::parseAndExecMsg( const std::string &msg ) {
     } else if( inputOrder.get_cmd() == "ban_all_peers" ) {
         ord = std::make_unique <banAllOrder>( msg );
     } else if( inputOrder.get_cmd() == "get_galaxy_ipv6" ) {
-        ord = std::make_unique <basicOrder>( msg );
+        ord = std::make_unique <getGalaxyIpV6Order>( msg );
     } else if( inputOrder.get_cmd() == "get_galaxy_new_format_reference" ) {
         ord = std::make_unique <getGalaxyOrder>( msg );
     } else if( inputOrder.get_cmd() == "hello" ) {
@@ -81,8 +81,8 @@ void commandExecutor::sendNetRequest( const order &ord ) {
         if ( !m_net_client->is_connected() ) {
             emit Disconnected();
             QSettings settings;
-            QString ip = settings.value( "rpcConnection/Ip" ).toString();
-            int port = settings.value( "rpcConnection/port" ).toInt();
+            QString ip = settings.value( "rpcConnection/Ip", "127.0.0.1" ).toString();
+            int port = settings.value( "rpcConnection/port", 42000 ).toInt();
             if( m_net_client->startConnect( QHostAddress( ip ),port ) ) {
                 emit Connected();
             }
