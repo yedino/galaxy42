@@ -73,5 +73,6 @@ void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 }
 
 c_tuntap_base_obj::~c_tuntap_base_obj() {
+	pfp_mark("Deleting the tuntap");
 	pfp_fact("Deleting the tuntap");
 }

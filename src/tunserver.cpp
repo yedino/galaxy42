@@ -787,7 +787,16 @@ void c_tunserver::prepare_socket() {
 
 		pfp_fact("Will configure the tun device");
 		try {
-			m_tun_device.init();
+			try {
+				m_tun_device.init();
+			} catch(tuntap_error_devtun &ex) {
+				if (m_tun_allow_init_failure) {
+					pfp_warn("Can not initialize TUN/TAP, but options say to ignore this - so will continue without TUN/TAP."); // TODO@lang
+					m_event_manager.init_without_tun();
+					return; // <=== return
+				}
+				else throw;
+			}
 			m_tun_device.set_ipv6_address(address, m_prefix_len);
 			m_tun_device.set_mtu(1304);
 
@@ -807,6 +816,7 @@ void c_tunserver::prepare_socket() {
 		pfp_assert(m_udp_device.get_socket() >= 0);
 	#endif
 
+	// TODO@lang
 	ui::action_info_ok("Started virtual network card interface (TUN)"
 	//under name: " + to_string(ifr.ifr_name)
 		+ std::string(" with proper IPv6 and other settings"));
@@ -1851,7 +1861,9 @@ void c_tunserver::event_loop(int time) {
 void c_tunserver::run(int time) {
 	pfp_goal(mo_file_reader::gettext("L_starting_TUN"));
 
-	m_tun_allow_init_failure = UsePtr(m_argm).at("workaround-tun-failinit").as<bool>() ;
+	pfp_mark("Reading option...");
+	m_tun_allow_init_failure = UsePtr(m_argm).at("tun-missing-ok").as<bool>() ;
+	pfp_mark("Option is: " << m_tun_allow_init_failure);
 
 	{
 		pfp_fact("Will now prepare socket");
