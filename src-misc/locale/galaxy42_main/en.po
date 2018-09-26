@@ -389,7 +389,10 @@ msgstr ""
 
 # TODO
 msgid "L_options_tun-missing-ok"
-msgstr "Program should work even if it would fail to access TUN/TAP (then program will not have own virtual IPv6, but still program could eg route traffic for others)"
+msgstr ""
+"Program should work even if it would fail to access TUN/TAP (then program "
+"will not have own virtual IPv6, but still program could eg route traffic for "
+"others)"
 
 #, fuzzy
 msgid "L_option_dlevel"

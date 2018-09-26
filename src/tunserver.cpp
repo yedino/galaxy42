@@ -1851,6 +1851,8 @@ void c_tunserver::event_loop(int time) {
 void c_tunserver::run(int time) {
 	pfp_goal(mo_file_reader::gettext("L_starting_TUN"));
 
+	m_tun_allow_init_failure = UsePtr(m_argm).at("workaround-tun-failinit").as<bool>() ;
+
 	{
 		pfp_fact("Will now prepare socket");
 		prepare_socket();
