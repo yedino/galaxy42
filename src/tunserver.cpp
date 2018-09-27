@@ -789,7 +789,7 @@ void c_tunserver::prepare_socket() {
 		try {
 			try {
 				m_tun_device.init();
-			} catch(tuntap_error_devtun &ex) {
+			} catch(const tuntap_error_devtun &ex) {
 				if (m_tun_allow_init_failure) {
 					pfp_warn("Can not initialize TUN/TAP, but options say to ignore this - so will continue without TUN/TAP."); // TODO@lang
 					m_event_manager.init_without_tun();

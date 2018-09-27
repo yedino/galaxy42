@@ -8,6 +8,7 @@
 
 void c_event_manager::init_without_tun() {
 	m_tun_enabled=false;
+	pfp_throw_error( std::runtime_error("Option to run with missing TUN is not implemented for c_event_manager for current OS.") );
 }
 
 #ifdef __linux__
