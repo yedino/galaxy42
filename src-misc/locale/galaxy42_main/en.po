@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-14 21:32+0100\n"
+"POT-Creation-Date: 2018-09-26 13:56+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Yedino\n"
@@ -18,12 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-
-msgid "L_TEST_LANG"
-msgstr "en_US.UTF-8"
-
-msgid "L_TEST_LANG_short"
-msgstr "en"
 
 msgid "L_program_is_pre_pre_alpha"
 msgstr ""
@@ -158,9 +152,6 @@ msgstr "--my-key is required for --info"
 msgid "L_setIDI_require_myKey"
 msgstr "--my-key is required for --set-IDI"
 
-msgid "L_error"
-msgstr "Error! "
-
 msgid "L_IDI_not_set_err"
 msgstr "IDI is not set!"
 
@@ -172,12 +163,6 @@ msgstr "Generating your new keys."
 
 msgid "L_fail_file_overwrite"
 msgstr ": file existing, it can't be overwrite [overwrite="
-
-msgid "L_fail_create_empty_file"
-msgstr ": fail to create empty file on given path and name"
-
-msgid "L_warn"
-msgstr "Warn! "
 
 msgid "L_do_you_want"
 msgstr "Do you want: "
@@ -391,10 +376,51 @@ msgstr "Get home directory:"
 msgid "L_what_netHelloInterval_do"
 msgstr "Set interval in seconds between pings"
 
-msgid "L_options_insecure-ADVANCED"
-msgstr ""
-"Special options only for developers! "
-"Should NOT be used by normal users!"
-
 msgid "L_what_home-env_option_do"
 msgstr "Set home directory path from HOME env. Works only on Linux"
+
+#, fuzzy
+msgid "l_fail_create_empty_file"
+msgstr ": fail to create empty file on given path and name"
+
+msgid "L_options_insecure-ADVANCED"
+msgstr ""
+"Special options only for developers! Should NOT be used by normal users!"
+
+# TODO
+msgid "L_options_tun-missing-ok"
+msgstr ""
+"Program should work even if it would fail to access TUN/TAP (then program "
+"will not have own virtual IPv6, but still program could eg route traffic for "
+"others)"
+
+#, fuzzy
+msgid "L_option_dlevel"
+msgstr "Error in options: "
+
+#, fuzzy
+msgid "L_port_do"
+msgstr "Set http debugger port"
+
+#, fuzzy
+msgid "L_rpcPort_do"
+msgstr "Set http debugger port"
+
+msgid "L_rpcListenAddress_do"
+msgstr ""
+
+#, fuzzy
+msgid "L_remove_peers_do"
+msgstr ""
+"Can not use the peers that you specified on the command line. Perhaps you "
+"have a typo in there."
+
+msgid "L_remove_peers_timeout_do"
+msgstr ""
+
+msgid "L_setThePrefix"
+msgstr ""
+
+#, fuzzy
+msgid "L_failed_deleting_peer_simple_reference"
+msgstr "Adding peer from simple reference failed (exception): "

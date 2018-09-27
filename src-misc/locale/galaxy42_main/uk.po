@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-14 21:32+0100\n"
+"POT-Creation-Date: 2018-09-26 13:56+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Yedino\n"
@@ -19,16 +19,11 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-msgid "L_TEST_LANG"
-msgstr "uk_UK.UTF-8"
-
-msgid "L_TEST_LANG_short"
-msgstr "uk"
-
 msgid "L_program_is_pre_pre_alpha"
 msgstr ""
-"Ця програма ще не готова та небезпечна! Не використовуйте цю "
-"версію програми. (Будь ласка, використовуйте цї тільки на тестовій віртуальній машині)."
+"Ця програма ще не готова та небезпечна! Не використовуйте цю версію "
+"програми. (Будь ласка, використовуйте цї тільки на тестовій віртуальній "
+"машині)."
 
 msgid "L_program_is_copyrighted"
 msgstr "Ця програма захищена авторським правом, дивиться LICENCE.txt"
@@ -38,8 +33,8 @@ msgstr "Ваша хеш-IPv6 адреса : "
 
 msgid "L_no_other_computer_Option_for_other"
 msgstr ""
-"Ви не підключаєтесь до будь-кого, так що ви повинні запустити цю программу на "
-"іншому комп’ютері з наступними опціями: "
+"Ви не підключаєтесь до будь-кого, так що ви повинні запустити цю программу "
+"на іншому комп’ютері з наступними опціями: "
 
 msgid "L_wait_for_connect"
 msgstr "Зараз будемо чека поки хто небудь підключиться до нас..."
@@ -52,8 +47,8 @@ msgstr "Параметри"
 
 msgid "L_what_help_do"
 msgstr ""
-"Друкувати інформаційні повідомленні, включно версію програми та параметри компіляції (що було "
-"включено)"
+"Друкувати інформаційні повідомленні, включно версію програми та параметри "
+"компіляції (що було включено)"
 
 msgid "L_what_h_do"
 msgstr "так само, як --help"
@@ -72,12 +67,13 @@ msgstr "так само, як --quiet"
 
 msgid "L_what_peer_do"
 msgstr ""
-"Додавання стандартних пірів, із синтаксисом у вігляді ip-pub. Может бути більше "
-"одного, для багатьох пірів."
+"Додавання стандартних пірів, із синтаксисом у вігляді ip-pub. Может бути "
+"більше одного, для багатьох пірів."
 
 msgid "L_what_info_do"
 msgstr ""
-"КОМАНДА: Друкує інформацію щодо ключа, який був зазначений у параметрі 'my-key'\n"
+"КОМАНДА: Друкує інформацію щодо ключа, який був зазначений у параметрі 'my-"
+"key'\n"
 "потребує [--my-key]"
 
 msgid "L_what_listMyKeys_do"
@@ -97,16 +93,16 @@ msgstr "Не завантажуйте будь-який конфігурацій
 
 msgid "L_what_genKeySimple_do"
 msgstr ""
-"КОМАНДА: Генерує рекомендований простий ключ (який дає вам пласо власності на "
-"нову хеш-IP адресу)"
+"КОМАНДА: Генерує рекомендований простий ключ (який дає вам пласо власності "
+"на нову хеш-IP адресу)"
 
 msgid "L_option_error"
 msgstr "Помилка в налаштуваннях: "
 
 msgid "L_warning_work_in_progres"
 msgstr ""
-"*** УВАГА: Робота над цією програмою ще триває, не використовуйте цій код, він має помилки, "
-"уразливості та 'одррукі' скрізь! ***"
+"*** УВАГА: Робота над цією програмою ще триває, не використовуйте цій код, "
+"він має помилки, уразливості та 'одррукі' скрізь! ***"
 
 msgid "L_wrong_peer_typo"
 msgstr ""
@@ -158,9 +154,6 @@ msgstr "--my-key потрібно для --info"
 msgid "L_setIDI_require_myKey"
 msgstr "--my-key потрібно для --set-IDI"
 
-msgid "L_error"
-msgstr "Помилка! "
-
 msgid "L_IDI_not_set_err"
 msgstr "IDI не зазначена!"
 
@@ -172,12 +165,6 @@ msgstr "Генеруємо Ваші нові ключі."
 
 msgid "L_fail_file_overwrite"
 msgstr ": файл існує та його не можна перезаписати [перезаписати="
-
-msgid "L_fail_create_empty_file"
-msgstr ": не вдалося створити порожній файл по заданому шляху та імені"
-
-msgid "L_warn"
-msgstr "Увага! "
 
 msgid "L_do_you_want"
 msgstr "Ви бажаєте: "
@@ -231,7 +218,8 @@ msgid "L_devel_mode_as_nr"
 msgstr "Працює в режимі розробника - як my_nr="
 
 msgid "L_faliture_parsing_demo_usr_conf_file"
-msgstr "Помилка в завантажені демонстраційного конфигураційного файла користувача ("
+msgstr ""
+"Помилка в завантажені демонстраційного конфигураційного файла користувача ("
 
 msgid "L_loaded_demo_usr_conf_file"
 msgstr "Завантажен демонстраційний конфігураційний файл користувача ("
@@ -247,8 +235,7 @@ msgstr "Працює в режимі розробника/демонстраці
 
 msgid "L_unhandled_exception_devel_mode"
 msgstr ""
-"Є проблема (Необроблене виключення досягло вершини (у "
-"РЕЖИМІ РОЗРОБНИКА):  "
+"Є проблема (Необроблене виключення досягло вершини (у РЕЖИМІ РОЗРОБНИКА):  "
 
 msgid "L_option_now_size"
 msgstr "' - розмір: "
@@ -279,22 +266,23 @@ msgstr "Знайдені налаштування програми"
 
 msgid "L_what_demo_do"
 msgstr ""
-"КОМАНДА: Спробуйте ДЕМОНСТРАЦІЮ тут. Виконайте одну з скомпільованих демонстрацій щод побачити "
-"як працює програма.\n"
+"КОМАНДА: Спробуйте ДЕМОНСТРАЦІЮ тут. Виконайте одну з скомпільованих "
+"демонстрацій щод побачити як працює програма.\n"
 "Використайте --demo довідку, щоб побачити перелік демонстрацій [TODO]."
 
 msgid "L_what_devel_do"
-msgstr "КОМАНДА: Тест: використовується розробником для запуску поточного тесту"
+msgstr ""
+"КОМАНДА: Тест: використовується розробником для запуску поточного тесту"
 
 msgid "L_what_decelnum_do"
 msgstr ""
-"Тест: використовуєтсья розробником для встановлення число вузлів (має сенс з налаштуваннях "
-"--devel)"
+"Тест: використовуєтсья розробником для встановлення число вузлів (має сенс з "
+"налаштуваннях --devel)"
 
 msgid "L_what_develdemo_do"
 msgstr ""
-"КОМАНДА: Тест: використовується розробником для встановлення поточного номеру демонстраційного тесту/ім’я(має "
-"сенс з налаштуванням --devel)"
+"КОМАНДА: Тест: використовується розробником для встановлення поточного "
+"номеру демонстраційного тесту/ім’я(має сенс з налаштуванням --devel)"
 
 msgid "L_what_myname_do"
 msgstr "Зручне ім’я для вашого вузла (наприглад, для налагодження)"
@@ -310,8 +298,8 @@ msgstr ""
 
 msgid "L_what_set_IDI_do"
 msgstr ""
-"КОМАНДА: Встановлює головний ключ інсталяції (IDI) який буде використовуватися для підпису "
-"підключеня (IDC)\n"
+"КОМАНДА: Встановлює головний ключ інсталяції (IDI) який буде "
+"використовуватися для підпису підключеня (IDC)\n"
 "потребує [--my-key]"
 
 msgid "L_what_sing_do"
@@ -337,8 +325,8 @@ msgstr ""
 "КОМАНДА: Веріфікує ключ або дані з довіреним ключем та ключем або дані\n"
 "потребує [--trusted-key або --trusted-key-file та --toverify-key або --"
 "toverify-key-file або --toverify-data-file *--signature-file]\n"
-"Сігнатура імені файлу за замовчуванням = ключ/ім’я файлу даних + \".sig\" розширення у "
-"тому самому місці як ключ/файл даниї"
+"Сігнатура імені файлу за замовчуванням = ключ/ім’я файлу даних + \".sig\" "
+"розширення у тому самому місці як ключ/файл даниї"
 
 msgid "L_what_trustedKey_do"
 msgstr "Ім’я довіреного ключу у місці за замовчуванням"
@@ -391,7 +379,53 @@ msgstr ""
 msgid "L_what_netHelloInterval_do"
 msgstr ""
 
+#, fuzzy
+msgid "L_what_home-env_option_do"
+msgstr "], що="
+
+#, fuzzy
+msgid "l_fail_create_empty_file"
+msgstr ": не вдалося створити порожній файл по заданому шляху та імені"
+
+# TODO
 msgid "L_options_insecure-ADVANCED"
 msgstr ""
-"Special options only for developers! "
-"Should NOT be used by normal users!"
+"Special options only for developers! Should NOT be used by normal users!"
+
+# TODO
+msgid "L_options_tun-missing-ok"
+msgstr ""
+"Program should work even if it would fail to access TUN/TAP (then program "
+"will not have own virtual IPv6, but still program could eg route traffic for "
+"others)"
+
+#, fuzzy
+msgid "L_option_dlevel"
+msgstr "Помилка в налаштуваннях: "
+
+#, fuzzy
+msgid "L_port_do"
+msgstr "так само, як --help"
+
+#, fuzzy
+msgid "L_rpcPort_do"
+msgstr "так само, як --help"
+
+msgid "L_rpcListenAddress_do"
+msgstr ""
+
+#, fuzzy
+msgid "L_remove_peers_do"
+msgstr ""
+"Не можемо використовувати піри, які були вказані у КОМАНДНОМУ рядку. Можливо "
+"Ви зробили одрук."
+
+msgid "L_remove_peers_timeout_do"
+msgstr ""
+
+msgid "L_setThePrefix"
+msgstr ""
+
+#, fuzzy
+msgid "L_failed_deleting_peer_simple_reference"
+msgstr "Додавання піру з простого референса не вдалося (вилучення): "

@@ -12,6 +12,11 @@ class c_event_manager {
 		virtual bool receive_udp_paket() = 0;
 		virtual bool get_tun_packet() = 0;
 		virtual void init()=0; ///< call this to finish init of the object
+
+		virtual void init_without_tun(); ///< call this to finish if you want the FD to be disabled
+
+	protected:
+		bool m_tun_enabled=true; ///< should we use TUN (e.g. m_tun_fd in child class) or is TUN disabled for some reason
 };
 
 
@@ -29,6 +34,7 @@ class c_event_manager_linux final : public c_event_manager {
 
 		virtual void init() override; ///< call this to finish init of the object, call it:
 		/// once the tun_device that we reference since constructor is now fully inited
+		virtual void init_without_tun() override;
 
 	private:
 		std::reference_wrapper<const c_tun_device_linux> m_tun_device;

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: galaxy42\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-14 21:32+0100\n"
+"POT-Creation-Date: 2018-09-26 13:56+0000\n"
 "PO-Revision-Date: 2016-08-19 17:23+0000\n"
 "Last-Translator:  <info@yedino.com>\n"
 "Language-Team: Yedino\n"
@@ -19,17 +19,10 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
 
-msgid "L_TEST_LANG"
-msgstr "pl_PL.UTF-8"
-
-msgid "L_TEST_LANG_short"
-msgstr "pl"
-
 msgid "L_program_is_pre_pre_alpha"
 msgstr ""
 "Ten program nie jest jeszcze gotowy, ani nie jest bezpieczny, proszę go nie "
-"używać w tej wersji.(Proszę używać go jedynie w testowej maszynie "
-"wirtualnej)"
+"używać w tej wersji.(Proszę używać go jedynie w testowej maszynie wirtualnej)"
 
 msgid "L_program_is_copyrighted"
 msgstr ""
@@ -41,8 +34,8 @@ msgstr "Twój adres hash-IPv6 : "
 
 msgid "L_no_other_computer_Option_for_other"
 msgstr ""
-"Nie jesteś z nikim połączony, powinienieś uruchomić ten program na "
-"innym komputerze z opcjami: "
+"Nie jesteś z nikim połączony, powinienieś uruchomić ten program na innym "
+"komputerze z opcjami: "
 
 msgid "L_wait_for_connect"
 msgstr "Teraz czekamy aż ktoś się do nas połączy..."
@@ -55,8 +48,8 @@ msgstr "Opcje"
 
 msgid "L_what_help_do"
 msgstr ""
-"Wypisuje pomocne wiadomości, łącznie z wersją programu i opcjami "
-"kompilacji (co jest włączone)"
+"Wypisuje pomocne wiadomości, łącznie z wersją programu i opcjami kompilacji "
+"(co jest włączone)"
 
 msgid "L_what_h_do"
 msgstr "To samo co --history"
@@ -75,8 +68,8 @@ msgstr "To samo co --quiet"
 
 msgid "L_what_peer_do"
 msgstr ""
-"Dodaje całą ścieżkę peera, w składni ip-pub. Może być podany więcej "
-"niż raz, dla wielu peerów"
+"Dodaje całą ścieżkę peera, w składni ip-pub. Może być podany więcej niż raz, "
+"dla wielu peerów"
 
 msgid "L_what_info_do"
 msgstr ""
@@ -84,8 +77,7 @@ msgstr ""
 "Wymaga [--my-key]"
 
 msgid "L_what_listMyKeys_do"
-msgstr ""
-"POLECENIE: Wyświetla Twoje klucze, które są w domyślnej lokalizacji"
+msgstr "POLECENIE: Wyświetla Twoje klucze, które są w domyślnej lokalizacji"
 
 msgid "L_what_myKey_do"
 msgstr "Wybiera już wygenerowany klucz z domyślnej lokalizacji"
@@ -163,9 +155,6 @@ msgstr "--my-key jest wymagane do --info"
 msgid "L_setIDI_require_myKey"
 msgstr "--my-key jest wymagane do --set-IDI"
 
-msgid "L_error"
-msgstr "Błąd! "
-
 msgid "L_IDI_not_set_err"
 msgstr "IDI nie jest ustawione!"
 
@@ -177,12 +166,6 @@ msgstr "Generowanie nowych kluczy."
 
 msgid "L_fail_file_overwrite"
 msgstr ": plik istnieje, nie może być nadpisany [overwrite="
-
-msgid "L_fail_create_empty_file"
-msgstr ": nieudana próba tworzenia pustego pliku o danej ścieżce i nazwie"
-
-msgid "L_warn"
-msgstr "Uwaga! "
 
 msgid "L_do_you_want"
 msgstr "Czy chcesz: "
@@ -219,8 +202,8 @@ msgstr "Wyjście, jak wyjaśniono powyżej"
 
 msgid "L_unhandled_exception_running_server"
 msgstr ""
-"Wystąpił błąd (Unhandled Exception reached the top of main (While "
-"running server))"
+"Wystąpił błąd (Unhandled Exception reached the top of main (While running "
+"server))"
 
 msgid "L_unknown_exception_running_server"
 msgstr "Nieznany wyjątek podczas pracy serwera"
@@ -254,8 +237,7 @@ msgstr "Uruchamianie w trybie developer/demo."
 
 msgid "L_unhandled_exception_devel_mode"
 msgstr ""
-"Wystąpił błąd (Unhandled Exception reached the top of main (in DEVEL "
-"MODE)): "
+"Wystąpił błąd (Unhandled Exception reached the top of main (in DEVEL MODE)): "
 
 msgid "L_option_now_size"
 msgstr "' - now size: "
@@ -286,8 +268,8 @@ msgstr "Analiza opcji programu"
 
 msgid "L_what_demo_do"
 msgstr ""
-"POLECENIE: Wypróbuj DEMO. Uruchom jeden z wkompilowanych pokazów jak dział"
-"a program\n"
+"POLECENIE: Wypróbuj DEMO. Uruchom jeden z wkompilowanych pokazów jak działa "
+"program\n"
 "Użyj --demo help aby zobaczyć listę DEMO [TODO]"
 
 msgid "L_what_devel_do"
@@ -296,13 +278,13 @@ msgstr ""
 
 msgid "L_what_decelnum_do"
 msgstr ""
-"Test: używany przez programistę, aby ustawić bieżący numer węzła (ma "
-"sens z opcją --devel)"
+"Test: używany przez programistę, aby ustawić bieżący numer węzła (ma sens z "
+"opcją --devel)"
 
 msgid "L_what_develdemo_do"
 msgstr ""
-"POLECENIE: Test: używany przez programistę, aby ustawić aktualny demo-"
-"test, numer/nazwę (ma sens z opcją --devel)"
+"POLECENIE: Test: używany przez programistę, aby ustawić aktualny demo-test, "
+"numer/nazwę (ma sens z opcją --devel)"
 
 msgid "L_what_myname_do"
 msgstr "Czytelna nazwa węzła (np do debugowania)"
@@ -398,12 +380,55 @@ msgstr "Pobrano ścieżkę katalogu domowego:"
 msgid "L_what_netHelloInterval_do"
 msgstr "Ustawia interwał w sekundach między pingami"
 
+msgid "L_what_home-env_option_do"
+msgstr ""
+"Program pobiera scieżkę do katalogu home ze zmiennej środowiskowej HOME. "
+"Działa tylko na Linuksie."
+
+#, fuzzy
+msgid "l_fail_create_empty_file"
+msgstr ": nieudana próba tworzenia pustego pliku o danej ścieżce i nazwie"
+
 msgid "L_options_insecure-ADVANCED"
 msgstr ""
 "Specjalne opcje tylko dla deweloperów, niebezpieczne! Nie powinny być "
 "używane przez zwykłego użytkownika!"
 
-msgid "L_what_home-env_option_do"
+# TODO
+msgid "L_options_tun-missing-ok"
 msgstr ""
-"Program pobiera scieżkę do katalogu home ze zmiennej środowiskowej HOME. "
-"Działa tylko na Linuksie."
+"Program should work even if it would fail to access TUN/TAP (then program "
+"will not have own virtual IPv6, but still program could eg route traffic for "
+"others)"
+
+#, fuzzy
+msgid "L_option_dlevel"
+msgstr "Błąd w opcjach: "
+
+#, fuzzy
+msgid "L_port_do"
+msgstr "Ustaw port http debuggera"
+
+#, fuzzy
+msgid "L_rpcPort_do"
+msgstr "Ustaw port http debuggera"
+
+msgid "L_rpcListenAddress_do"
+msgstr ""
+
+#, fuzzy
+msgid "L_remove_peers_do"
+msgstr ""
+"Nie można użyć peera określonego w lini komend. Prawdopodobnie masz tam "
+"literówkę."
+
+msgid "L_remove_peers_timeout_do"
+msgstr ""
+
+msgid "L_setThePrefix"
+msgstr ""
+
+#, fuzzy
+msgid "L_failed_deleting_peer_simple_reference"
+msgstr ""
+"Dodawanie peera poprzez proste odniesienie nie powiodło się (wyjątek): "

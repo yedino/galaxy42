@@ -3,6 +3,14 @@
 #include <thread>
 #include <chrono>
 
+
+
+
+void c_event_manager::init_without_tun() {
+	m_tun_enabled=false;
+	pfp_throw_error( std::runtime_error("Option to run with missing TUN is not implemented for c_event_manager for current OS.") );
+}
+
 #ifdef __linux__
 #include <limits>
 
@@ -20,14 +28,21 @@ void c_event_manager_linux::init() {
 	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
-void c_event_manager_linux::wait_for_event() {
+void c_event_manager_linux::init_without_tun() {
+	m_tun_fd=-1;
+	m_tun_enabled=false;
+}
 
+void c_event_manager_linux::wait_for_event() {
 	pfp_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
-	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_socket, &m_fd_set_data);
-	FD_SET(m_tun_fd, &m_fd_set_data);
+
+	if (m_tun_enabled) {
+		if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
+		FD_SET(m_tun_fd, &m_fd_set_data);
+	}
 	auto fd_max = std::max(m_tun_fd, m_udp_socket);
 	pfp_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	pfp_assert(fd_max >= 1);

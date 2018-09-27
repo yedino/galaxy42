@@ -283,7 +283,10 @@ class c_tunserver : public c_galaxy_node {
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
 		#ifdef __linux__
+
 		c_tun_device_linux m_tun_device;
+		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
+
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
 		#elif defined(_WIN32) || defined(__CYGWIN__)

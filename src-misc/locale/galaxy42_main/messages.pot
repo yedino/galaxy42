@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-14 21:32+0100\n"
+"POT-Creation-Date: 2018-09-26 14:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -134,9 +134,6 @@ msgstr ""
 msgid "L_setIDI_require_myKey"
 msgstr ""
 
-msgid "L_error"
-msgstr ""
-
 msgid "L_IDI_not_set_err"
 msgstr ""
 
@@ -147,12 +144,6 @@ msgid "L_generatin_new_keys"
 msgstr ""
 
 msgid "L_fail_file_overwrite"
-msgstr ""
-
-msgid "L_fail_create_empty_file"
-msgstr ""
-
-msgid "L_warn"
 msgstr ""
 
 msgid "L_do_you_want"
@@ -339,4 +330,37 @@ msgid "L_what_netHelloInterval_do"
 msgstr ""
 
 msgid "L_what_home-env_option_do"
+msgstr ""
+
+msgid "l_fail_create_empty_file"
+msgstr ""
+
+msgid "L_options_insecure-ADVANCED"
+msgstr ""
+
+msgid "L_options_tun-missing-ok"
+msgstr ""
+
+msgid "L_option_dlevel"
+msgstr ""
+
+msgid "L_port_do"
+msgstr ""
+
+msgid "L_rpcPort_do"
+msgstr ""
+
+msgid "L_rpcListenAddress_do"
+msgstr ""
+
+msgid "L_remove_peers_do"
+msgstr ""
+
+msgid "L_remove_peers_timeout_do"
+msgstr ""
+
+msgid "L_setThePrefix"
+msgstr ""
+
+msgid "L_failed_deleting_peer_simple_reference"
 msgstr ""
