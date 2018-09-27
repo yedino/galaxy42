@@ -56,8 +56,8 @@ class c_the_program {
 
 		/// Dirs/path options for the program
 		/// @{
-		string m_install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir
-		std::string m_install_dir_share_locale; ///< dir with our locale data
+		string m_install_dir_base; ///< here we will find main dir like "/usr/" that contains our share dir, it will be terminated with "/", or it will be an empty string "".
+		std::string m_install_dir_share_locale; ///< dir with our locale data, will be terminated with "/", or will be an empty string ""
 		/// @}
 
 		/// Debug options for the program

@@ -92,23 +92,38 @@ void c_the_program::startup_data_dir() {
 		std::cerr << "Start... [" << cwd_full << "] (cwd) " << std::endl;
 		std::cerr << "Start... [" << selfdir << "] (exec) " << std::endl;
 
-		vector<string> data_dir_possible;
-		data_dir_possible.push_back(cwd_full.string());
-		data_dir_possible.push_back(selfdir.string());
+		const string toplevel_marker_filename = "toplevel-project-yedino-org"; // name of file, that will be present in top level of source code, to mark this project [project] [yedino]
+		const string toplevel_example_file = "share/locale/en/LC_MESSAGES/galaxy42_main.mo"; // if this file exists then this looks like a good directory
+
+		vector<string> data_dir_possible; // dirs (relative, or absolute) that might contain data dir including translations
+		std::set<string> data_dir_needs_marker; // put here dirs from like in data_dir_possible[] that require to have toplevel_marker_filename file
+
+		data_dir_possible.push_back(cwd_full.string() + "/");
+		data_dir_possible.push_back(selfdir.string() + "/");
 
 		#if defined(__MACH__)
 			// TODO when macosx .dmg fully works (when Gitian on macosx works)
 		#elif defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(_MSC_VER)
 			// data files should be next to .exe
 		#else
-			data_dir_possible.push_back("/usr");
-			data_dir_possible.push_back("/usr/local");
-			data_dir_possible.push_back("/usr/opt");
+			data_dir_possible.push_back("/usr/");
+			data_dir_possible.push_back("/usr/local/");
+			data_dir_possible.push_back("/usr/opt/");
+
+			{ const string d="../";	// in case when we are in build directory right under source root
+				data_dir_possible.push_back(d);
+				data_dir_needs_marker.insert(d); // this dir must have a marker file there, since it's some random location "../" might end up in unexpected files of user
+			}
 		#endif
 
 		for (auto && dir : data_dir_possible) {
-			string testname = dir;
-			testname += "/share/locale/en/LC_MESSAGES/galaxy42_main.mo";
+			if (data_dir_needs_marker.count(dir)) { // does this dir need a marker-file before we start poking around
+				const string testname = dir + toplevel_marker_filename; // if this file exists then this looks like a good directory
+				pfp_fact( "Test? [" << testname << "]... " );
+				ifstream filetest( testname.c_str() );
+				if (! filetest.good()) continue; // !
+			}
+			const string testname = dir + toplevel_example_file; // if this file exists then this looks like a good directory
 			pfp_fact( "Test: [" << testname << "]... " );
 			ifstream filetest( testname.c_str() );
 			if (filetest.good()) {
@@ -122,11 +137,16 @@ void c_the_program::startup_data_dir() {
 			pfp_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 	}
 
-	if (!found) pfp_fact( "Can not find language data files." );
-
-	pfp_fact( "Data: [" << m_install_dir_base << "]" );
-	m_install_dir_share_locale = m_install_dir_base + "/share/locale";
-	pfp_fact( "Lang: [" << m_install_dir_share_locale << "]" );
+	if (!found) {
+		pfp_fact( "Can not find language data files." );
+		assert( m_install_dir_base == "" );
+	}
+	else {
+		assert( at_back(m_install_dir_base)=='/' );
+		pfp_fact( "Data: [" << m_install_dir_base << "]" );
+		m_install_dir_share_locale = m_install_dir_base + "share/locale/";
+		pfp_fact( "Lang: [" << m_install_dir_share_locale << "]" );
+	}
 }
 
 void c_the_program::startup_locales_early() {
