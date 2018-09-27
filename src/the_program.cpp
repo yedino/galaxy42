@@ -137,12 +137,16 @@ void c_the_program::startup_data_dir() {
 			pfp_erro( "Error while looking for data directory ("<<ex.what()<<")" << std::endl );
 	}
 
-	if (!found) pfp_fact( "Can not find language data files." );
-
-	assert( at_back(m_install_dir_base)=='/' );
-	pfp_fact( "Data: [" << m_install_dir_base << "]" );
-	m_install_dir_share_locale = m_install_dir_base + "share/locale";
-	pfp_fact( "Lang: [" << m_install_dir_share_locale << "]" );
+	if (!found) {
+		pfp_fact( "Can not find language data files." );
+		assert( m_install_dir_base == "" );
+	}
+	else {
+		assert( at_back(m_install_dir_base)=='/' );
+		pfp_fact( "Data: [" << m_install_dir_base << "]" );
+		m_install_dir_share_locale = m_install_dir_base + "share/locale/";
+		pfp_fact( "Lang: [" << m_install_dir_share_locale << "]" );
+	}
 }
 
 void c_the_program::startup_locales_early() {
