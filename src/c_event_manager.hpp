@@ -42,7 +42,7 @@ class c_event_manager_linux final : public c_event_manager {
 };
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__) ||defined(__MACH__) || defined(__FreeBSD__)
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MACH__)
 #if defined(__CYGWIN__)
 	#ifndef __USE_W32_SOCKETS
 		#define __USE_W32_SOCKETS
@@ -53,8 +53,6 @@ class c_event_manager_linux final : public c_event_manager {
 class c_tun_device_windows;
 #elif defined(__MACH__)
 class c_tun_device_apple;
-#elif defined(__FreeBSD__)
-class c_tun_device_freebsd;
 #endif
 class c_udp_wrapper_asio;
 
@@ -70,6 +68,7 @@ class c_event_manager_asio final : public c_event_manager {
         void wait_for_event() override;
         bool receive_udp_packet() override;
         virtual bool get_tun_packet() override;
+	virtual void init_without_tun() override;
     private:
         int m_tun_fd;
         #if defined(_WIN32) || defined(__CYGWIN__)
@@ -98,6 +97,7 @@ class c_event_manager_bsd final : public c_event_manager {
 
 		virtual void init() override; ///< call this to finish init of the object, call it:
 		/// once the tun_device that we reference since constructor is now fully inited
+		virtual void init_without_tun() override;
 
 	private:
 		std::reference_wrapper<const c_tun_device_bsd> m_tun_device;
@@ -119,6 +119,7 @@ class c_event_manager_empty final : public c_event_manager {
 		void wait_for_event();
 		bool receive_udp_packet();
 		bool get_tun_packet();
+		virtual void init_without_tun() override;
 };
 #endif
 

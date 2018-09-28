@@ -3,7 +3,6 @@
 #include <thread>
 #include <chrono>
 
-#if defined(ANTINET_linux)
 void c_event_manager::init_without_tun() {
 	m_tun_enabled=false;
 	pfp_throw_error( std::runtime_error("Option to run with missing TUN is not implemented for c_event_manager for current OS.") );
@@ -11,6 +10,7 @@ void c_event_manager::init_without_tun() {
 
 #include <limits>
 
+#if defined(ANTINET_linux)
 c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper)
 :
 	m_tun_device(tun_device),
@@ -115,6 +115,11 @@ bool c_event_manager_asio::receive_udp_packet() {
 bool c_event_manager_asio::get_tun_packet() {
 	return m_tun_event;
 }
+
+void c_event_manager_asio::init_without_tun() {
+	m_tun_fd=-1;
+	m_tun_enabled=false;
+}
 #endif
 
 #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
@@ -155,6 +160,11 @@ bool c_event_manager_bsd::receive_udp_packet() {
 bool c_event_manager_bsd::get_tun_packet() {
 	return FD_ISSET(m_tun_fd, &m_fd_set_data);
 }
+
+void c_event_manager_bsd::init_without_tun() {
+	m_tun_fd=-1;
+	m_tun_enabled=false;
+}
 #endif
 
 #if defined(EMPTY)
@@ -165,4 +175,5 @@ c_event_manager_empty::c_event_manager_empty(const c_tun_device_empty &tun_devic
 void c_event_manager_empty::wait_for_event() { }
 bool c_event_manager_empty::receive_udp_packet() { return false; }
 bool c_event_manager_empty::get_tun_packet() { return false; }
+void c_event_manager_empty::init_without_tun() { }
 #endif
