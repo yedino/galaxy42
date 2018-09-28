@@ -295,6 +295,7 @@ class c_tunserver : public c_galaxy_node {
                 #endif
 		#if defined(ANTINET_macosx)
                 c_tun_device_apple m_tun_device;
+		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
                 #endif
