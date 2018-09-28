@@ -450,17 +450,13 @@ std::string order::getPeerName()
 
 getClientName::getClientName( const std::string &json_str,commandExecutor *executor )
 {
-    try {
-        nlohmann::json j = nlohmann::json::parse( json_str );
-        m_state = j["state"];
-        m_id = j["id"];
-        if(m_state == "ok") {
-            m_account = j["account_address"];
-        }
-        m_executor = executor;
-    } catch( std::exception &e ) {
-        qDebug()<<e.what();
-    }
+	nlohmann::json j = nlohmann::json::parse( json_str );
+	m_state = j["state"];
+	m_id = j["id"];
+//	if(m_state == "ok") {
+//		m_account = j["account_address"];
+//	}
+	m_executor = executor;
 }
 
 std::string getClientName::get_str() const
@@ -475,6 +471,7 @@ void getClientName::execute( MainWindow & )
         QString id = QString::fromStdString( m_id );
         QString client_num= id.split( "-" ).at( 0 );
         client_num += "-cli";
+        assert(m_executor != nullptr);
         m_executor->setSenderRpcName( client_num );
     } else  {
 //        main_window.resetCommunication;
@@ -619,6 +616,40 @@ statusOrder::statusOrder(const RpcId& Id)
     }catch(std::exception &e){
         qDebug()<<e.what();
     }
+}
+
+getGalaxyIpV6Order::getGalaxyIpV6Order(const RpcId& Id) 
+{
+    try{
+        m_cmd ="get_galaxy_ipv6";
+        m_state = "ok";
+        m_id = Id.m_id;
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+    }
+}
+
+getGalaxyIpV6Order::getGalaxyIpV6Order(const std::string &json_str)
+{
+    try{
+        nlohmann::json j = nlohmann::json::parse( json_str );
+        m_state = j["state"];
+        m_ipv6 = j["ipv6"];
+        m_id = j["id"];
+    }catch(std::exception &e){
+        qDebug()<<e.what();
+        return;
+    }
+}
+
+void getGalaxyIpV6Order::execute(MainWindow &main_window)
+{
+	if( m_state == "ok" ) {
+		QString ipv6 = QString::fromStdString(m_ipv6);
+		main_window.setIps( ipv6, ipv6 );
+	} else  {
+		qDebug()<< "can't get address ip V6 ";
+	}
 }
 
 

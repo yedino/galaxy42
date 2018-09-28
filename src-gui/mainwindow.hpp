@@ -46,15 +46,14 @@ public:
     StatusForm *GetStatusObject();
     void onPeerBanned(const QString &vip);
     void runTunTap();
+	
+	void setIps(const QString &ip,const QString &vip);
 
 public slots:
 
 	void add_host_info(QString host, uint16_t port);
     void showDebugPage(QByteArray &pageCode);
     void onCreateGalaxyConnection();
-
-    QStringList getLocalIps();
-    QStringList getLocalVips();
 
     void onGetMyInvitatiom(std::string );
     void errorNotification(QString err);
@@ -111,8 +110,6 @@ private:
 
     void deletePeer(const std::string &peer_id);
 
-    QString m_host_port;
-    QString m_host_ip;
     CommandSender* m_sender;
     StatusForm *m_status_form;
     TunTapRunner *m_tuntap_runner;

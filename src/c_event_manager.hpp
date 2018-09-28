@@ -12,26 +12,33 @@ class c_event_manager {
 		virtual bool receive_udp_packet() = 0;
 		virtual bool get_tun_packet() = 0;
 		virtual void init()=0; ///< call this to finish init of the object
+
+		virtual void init_without_tun(); ///< call this to finish if you want the FD to be disabled
+
+	protected:
+		bool m_tun_enabled=true; ///< should we use TUN (e.g. m_tun_fd in child class) or is TUN disabled for some reason
 };
 
-#if defined(__linux__)
+#if defined(ANTINET_linux)
 class c_tun_device_linux;
 class c_udp_wrapper_linux;
 #include <sys/select.h>
-
 class c_event_manager_linux final : public c_event_manager {
-    public:
-        c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper);
-        void wait_for_event() override;
-        bool receive_udp_packet() override;
-        virtual bool get_tun_packet() override;
-        virtual void init() override; ///< call this to finish init of the object, call it:
-        /// once the tun_device that we reference since constructor is now fully inited
-    private:
-        std::reference_wrapper<const c_tun_device_linux> m_tun_device;
-        int m_tun_fd;
-        const int m_udp_socket;
-        fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
+	public:
+		c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper);
+		void wait_for_event() override;
+		bool receive_udp_packet() override;
+		virtual bool get_tun_packet() override;
+
+		virtual void init() override; ///< call this to finish init of the object, call it:
+		/// once the tun_device that we reference since constructor is now fully inited
+		virtual void init_without_tun() override;
+
+	private:
+		std::reference_wrapper<const c_tun_device_linux> m_tun_device;
+        	int m_tun_fd;
+        	const int m_udp_socket;
+        	fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
 };
 #endif
 

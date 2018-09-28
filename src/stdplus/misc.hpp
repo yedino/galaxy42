@@ -27,6 +27,23 @@ and stdplus/misc are assorted parts of that
 
 namespace stdplus {
 
+
+// ===========================================================================================================
+
+/// Gets the back() of a container, but if it's empty then throws instead doing UB
+template<typename T> typename T::reference at_back(T & container) // when the container is not-const object, the we will get not-const reference
+{
+	if (container.empty()) throw std::runtime_error("Trying to get back() of empty container");
+	return container.back();
+}
+
+/// Gets the back() of a container, but if it's empty then throws instead doing UB
+template<typename T> typename T::const_reference at_back(const T & container) // when the container is const object, the we will get const reference
+{
+	if (container.empty()) throw std::runtime_error("Trying to get back() of empty container");
+	return container.back();
+}
+
 // ===========================================================================================================
 // exception types
 

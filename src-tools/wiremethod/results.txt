@@ -1,0 +1,41 @@
+
+This is moved here (into yedino/galaxy42) and was stored in:
+
+testfiber@Blitz:~/meshnetplwire$ git log -1
+commit 26a8a25341f5c72171f2fbf69540ad890ddcc7d0 (HEAD)
+Author: rfree VM <rfree@meshnet.pl>
+Date:   Fri Sep 14 19:59:43 2018 +0200
+    [doc] moving to yedino/galaxy42 repo
+
+---
+
+Dragon (new mobo)
+
+method20 a -> 27.4 Gbps / 40 = 6.75*2 + 2*6.99
+
+---
+
+methods up to 16 are mostly tested on Blitz (with 1 card so 2 modules, or with 2 cards diving 4 modules).
+
+method-12-r: raw, using 2-modules of X520, and 2-modules of NX3031,
+gives 19420 Gbps = 2*6060 + 2*3650 Gbps over all 4 modules, UDP 8972.
+or, 25400 Gbps = =7500*2 + 5200*2 Gbps when sending RAW Ethernet.
+
+method-11-r: raw, when using 2-modules of X520, is giving 2*8100 Gbps egres over 2 modules UDP 8972.
+User <TX> reported/got 2×9100 Gbps, using probably this method, this remains to be fully recorded and verified.
+Note: perhaps that result was with "11 a" sending.
+
+
+method-10-r: and FIXED numbering of non-HT cores (0..6 times 4 cpus, then again 0..6 times 4 HT-cpus)
+On Blitz, no-HT (but also HT), same layout and all,
+gives 2 × 8.6 - 8.7 Gbps TX over 2 modules UDP 8972
+
+method-3:
+15.2 (worse idea), code is refactored
+
+method-2:
+On Blitz, no-HT, layout blitz2splitdw.txt (blitz X520 to dragon NX3031 and wolf X520), debian10, defaults, stopped irqbalance
+this method2 gives: 15.8 - 16.0 Gbps TX over 2 modules UDP 8972
+
+
+

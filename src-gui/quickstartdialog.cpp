@@ -6,6 +6,7 @@
 #include "qrdialog.h"
 #include "quickstartdialog.h"
 #include "ui_quickstartdialog.h"
+#include <qrencode.h>
 
 quickStartDialog::quickStartDialog( QWidget *parent ) :
     QWidget( parent ),
@@ -49,7 +50,7 @@ void quickStartDialog::on_allowStrangersBox_clicked( bool checked )
 
 void quickStartDialog::on_wwwButton_clicked()
 {
-    QString page_address = "www.google.com";
+    QString page_address = "www.meshnet.pl";
 
     QUrl url( page_address );
     bool done =	QDesktopServices::openUrl( url );
@@ -78,7 +79,25 @@ void quickStartDialog::on_QrScanButton_clicked()
 
 void quickStartDialog::on_QrZoomButton_clicked()
 {
-    QPixmap qr_code;			//!@todo add real qrCode
+	QRcode *qr = QRcode_encodeString(ui->myInviteEdit->text().toStdString().c_str(), 1, QR_ECLEVEL_L, QR_MODE_8, 1);
+	if( !qr )
+		throw std::runtime_error("Invalid QR generation!!!");
+
+	QPixmap qr_code;
+	unsigned char rect_size = 6;
+	QImage tmp(qr->width*rect_size, qr->width*rect_size, QImage::Format::Format_RGB32);
+	QColor color(Qt::white);
+	tmp.fill(color);
+
+	for(int yy = 0; yy < qr->width; yy++)
+		for(int xx= 0; xx < qr->width; xx++)
+			if( qr->data[yy*qr->width+xx] & 0x01 )
+				for(int i = 0; i < rect_size; i++)
+					for(int j = 0; j < rect_size; j++)
+						tmp.setPixelColor(xx*rect_size+i, yy*rect_size+j, Qt::black);
+	qr_code = QPixmap::fromImage(tmp);
+
+	QRcode_free(qr);
 //    ui->QrZoomButton->setIcon(); //setting new icons
     QrDialog dlg( qr_code );
     dlg.exec();

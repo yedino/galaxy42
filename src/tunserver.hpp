@@ -282,17 +282,18 @@ class c_tunserver : public c_galaxy_node {
         #endif
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
-                #if defined(__linux__)
+                #if defined(ANTINET_linux)
 		c_tun_device_linux m_tun_device;
+		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
                 #endif
-		#if defined(_WIN32) || defined(__CYGWIN__)
+		#if defined(ANTINET_windows)
 		c_tun_device_windows m_tun_device;
 		c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
                 #endif
-		#if defined(__MACH__)
+		#if defined(ANTINET_macosx)
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;

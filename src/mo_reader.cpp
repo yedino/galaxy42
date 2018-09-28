@@ -68,7 +68,7 @@ void mo_file_reader::read_file() {
 
 void mo_file_reader::add_messages_dir(const std::string &path) {
 	m_messages_dir = path;
-	pfp_fact("Starting translations reader (mo_reader) for path: " << m_messages_dir);
+	pfp_fact("Starting translations reader (mo_reader) for path: [" << m_messages_dir << "]");
 }
 
 void mo_file_reader::add_messages_dir(std::string &&path) {

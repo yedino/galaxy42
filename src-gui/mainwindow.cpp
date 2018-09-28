@@ -30,11 +30,6 @@ MainWindow::MainWindow( QWidget *parent ) :
     ui->setupUi( this );
     ui->peerListWidget_2->setMainWindow( this );
 
-
-
-    QString ip = getLocalIps().at( 0 );
-    QString vip = getLocalVips().at( 0 ).split( '%' ).at( 0 );
-    ui->quickStart->setIps( ip,vip );
     connect( ui->quickStart,SIGNAL( connectNet( QString ) ),this,SLOT( connectToNet( QString ) ) );
     connect( ui->quickStart,SIGNAL( createNet() ),this,SLOT( createNet() ) );
     connect( ui->quickStart, SIGNAL( allowFriend( bool ) ),this,SLOT( onAllowFriend( bool ) ) );
@@ -78,10 +73,9 @@ void MainWindow::setDebugInfo(const QString &str)
 void MainWindow::startNewCrpcConnection( const QString &host,uint port )//!@todo move to statusForm
 {
     m_cmd_exec = new commandExecutor( this ) ;
+    m_cmd_exec->startConnect( QHostAddress( host ), port );
     m_sender = new CommandSender( m_cmd_exec,this );
     m_cmd_exec->setSender( m_sender );
-    m_cmd_exec->startConnect( QHostAddress( host ), port );
-    m_sender->sendCommand( CommandSender::orderType::GETNAME );
 }
 
 std::shared_ptr<MainWindow> MainWindow::create_shared_ptr() {
@@ -248,43 +242,6 @@ void MainWindow::on_actionDebug_triggered() {
 void MainWindow::onCreateGalaxyConnection()
 {
 
-    QStringList list_ips = getLocalIps();
-
-    std::vector <std::string> ips;
-
-    for ( auto &it:list_ips ) {
-        ips.push_back( it.toStdString() );
-    }
-//    getGalaxyOrder ord(ips);
-//    m_cmd_exec->sendNetRequest(ord);
-
-
-//	getGalaxyOrder order
-}
-
-
-QStringList MainWindow::getLocalIps()
-{
-    QStringList ret_val;
-
-    foreach ( const QHostAddress &address, QNetworkInterface::allAddresses() ) {
-        if ( address.protocol() == QAbstractSocket::IPv4Protocol && address
-                != QHostAddress( QHostAddress::LocalHost ) && !address.isLoopback() )
-            ret_val.push_back( address.toString() );
-    }
-
-    return ret_val;
-}
-
-QStringList MainWindow::getLocalVips()
-{
-    QStringList ret_val;
-    foreach ( const QHostAddress &address, QNetworkInterface::allAddresses() ) {
-        if ( address.protocol() == QAbstractSocket::IPv6Protocol && address
-                != QHostAddress( QHostAddress::LocalHost ) && !address.isLoopback() )
-            ret_val.push_back( address.toString() );
-    }
-    return ret_val;
 }
 
 void MainWindow::onGetMyInvitatiom( std::string ipv6 )
@@ -316,21 +273,16 @@ void MainWindow::addDebugInfo( const QString &str )
 void MainWindow::loadSettings()
 {
     QSettings setings;
-    QString ip = setings.value( "rpcConnection/Ip" ).toString();
-    QString port = setings.value( "rpcConnection/port" ).toString();
-    if ( port.size()== 0 ) port="42000";			//! @todo add ability of changing port
-    if( ip.size() == 0 ) ip="127.0.0.1";			//localhost
-    m_host_port = port;
-    m_host_ip = ip;
+    QString ip = setings.value( "rpcConnection/Ip", "127.0.0.1" ).toString();
+    QString port = setings.value( "rpcConnection/port", "42000" ).toString();
 
     qDebug()<<"ip & port"<<ip<<" "<<port;
-
 }
 
 void MainWindow::initSettings()
 {
     QSettings setings;
-    if( setings.allKeys().size() >= 2 ) {			//no need to initialize
+    if( setings.childGroups().contains( "rpcConnection" ) ) {			//no need to initialize
         return;
     }
 
@@ -558,6 +510,11 @@ void MainWindow::runTunTap()
 
 
     m_tuntap_runner = new TunTapRunner(this,program_pth,script_path);
+}
+
+void MainWindow::setIps(const QString &ip,const QString &vip)
+{
+	ui->quickStart->setIps( ip,vip );
 }
 
 

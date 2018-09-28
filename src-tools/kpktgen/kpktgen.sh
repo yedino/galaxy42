@@ -98,6 +98,8 @@ do
 	this_targetip=""
 	this_dev=$(cat "/var/local/iplab2/nic${cardnr}-dev.txt") || fail "Can not read p2p9x9 config"
 	this_targetip=$(cat "/var/local/iplab2/nic${cardnr}-dstip.txt") || fail "Can not read p2p9x9 config"
+
+	# convert this_targetip (own IP address on interface) into it's MAC address
 	this_mac=""
 	while IFS= read -r arp_line; do
 		IFS=' ' read -r arp_ip arp_hwtype arp_mac other_fields <<< "$arp_line"
@@ -107,7 +109,7 @@ do
 			break
 		fi
 	done < <(
-		arp
+		arp -n
 	)
 
 	if [[ -z "$this_mac" ]] ; then

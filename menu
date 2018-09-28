@@ -68,9 +68,9 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"d10"       "Build: with ./do extlevel 10"  \
 	"d20"       "Build: with ./do extlevel 20 - slow?"  \
 	"d30"       "Build: with ./do extlevel 30 - slow! insecure!"  \
-	"-" "--- Benchmarks ---" \
+	"-" "=== Benchmarks ===" \
 	"ball"      "Benchmarks: run all" \
-	"-" "--- Gitian ---" \
+	"-" "=== Gitian ===" \
 	"gli"       "Build: Gitian for Linux (image) - slow!"  \
 	"gwi"       "Build: Gitian for Windows (image) - slow!"  \
 	"gai"       "Build: Gitian for all (image) - slow!"  \
@@ -80,7 +80,7 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"-" "" \
 	"gt"        "Hack: Gitian: on-target (alias: o-t)"  \
 	"gr"        "Hack: Gitian: on-target-root (alias: o-t-r)"  \
-	"-" "--- Language ---" \
+	"-" "=== Language ===" \
 	"lc"        "Language: update: re-COMPILE .po --> .mo" \
 	"lui"       "Language: update: Scripts: INSTALLER" \
 	"luu"       "Language: update: Scripts: UTILS (g42bashutils)" \
@@ -92,7 +92,7 @@ response=$( abdialog  --menu  "$(eval_gettext "\$programname:")" "$dialog_h" "$d
 	"til"       "Tests: run Installer - in all Languages" \
 	"tid"       "Tests: run Installer - in all Dialog menu types" \
 	"-" "" \
-	"-" "--- Git/Security ---" \
+	"-" "=== Git/Security ===" \
 	"GS"        "Git Security: check git history integrity" \
 	"GSk"       "Git Security: as above (GS) but first import all keys from here TO YOUR GPG" \
 	"-" "" \

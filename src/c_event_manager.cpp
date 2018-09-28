@@ -3,8 +3,12 @@
 #include <thread>
 #include <chrono>
 
+#if defined(ANTINET_linux)
+void c_event_manager::init_without_tun() {
+	m_tun_enabled=false;
+	pfp_throw_error( std::runtime_error("Option to run with missing TUN is not implemented for c_event_manager for current OS.") );
+}
 
-#if defined(__linux__)
 #include <limits>
 
 c_event_manager_linux::c_event_manager_linux(const c_tun_device_linux &tun_device, const c_udp_wrapper_linux &udp_wrapper)
@@ -21,13 +25,21 @@ void c_event_manager_linux::init() {
 	pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 }
 
+void c_event_manager_linux::init_without_tun() {
+	m_tun_fd=-1;
+	m_tun_enabled=false;
+}
+
 void c_event_manager_linux::wait_for_event() {
 	pfp_dbg3("Selecting. m_tun_fd="<<m_tun_fd);
-	if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
 	// set the wait for read events:
 	FD_ZERO(& m_fd_set_data);
 	FD_SET(m_udp_socket, &m_fd_set_data);
-	FD_SET(m_tun_fd, &m_fd_set_data);
+
+	if (m_tun_enabled) {
+		if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to select, while tuntap fd is not ready in this class."));
+		FD_SET(m_tun_fd, &m_fd_set_data);
+	}
 	auto fd_max = std::max(m_tun_fd, m_udp_socket);
 	pfp_assert(fd_max < std::numeric_limits<decltype(fd_max)>::max() -1); // to be more safe, <= would be enough too
 	pfp_assert(fd_max >= 1);
@@ -46,8 +58,8 @@ bool c_event_manager_linux::get_tun_packet() {
 }
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__) || defined (__MACH__)
-#if defined(__MACH__)
+#if defined(ANTINET_windows) || defined (ANTINET_macosx)
+#if defined(ANTINET_macosx)
 c_event_manager_asio::c_event_manager_asio(c_tun_device_apple &tun_device, c_udp_wrapper_asio &udp_wrapper)
 #else // _WIN32 || __CYGWIN__
 c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_udp_wrapper_asio &udp_wrapper)
@@ -61,7 +73,7 @@ c_event_manager_asio::c_event_manager_asio(c_tun_device_windows &tun_device, c_u
 }
 
 void c_event_manager_asio::init() {
-	#if defined (__MACH__)
+	#if defined (ANTINET_macosx)
 		m_tun_fd = m_tun_device.get().get_tun_fd();
 		pfp_goal("Event manager will watch tuntap fd " << m_tun_fd);
 		if (m_tun_fd<0) pfp_throw_error(std::runtime_error("Trying to init event manager, but this tuntap device still doesn't have valid fd."));
