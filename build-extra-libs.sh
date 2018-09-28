@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 
 echo ""
 echo "We now will build the NTru-Encrypt library"
