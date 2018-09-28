@@ -284,7 +284,6 @@ class c_tunserver : public c_galaxy_node {
 		//int m_tun_fd; ///< fd of TUN file
                 #if defined(ANTINET_linux)
 		c_tun_device_linux m_tun_device;
-		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
                 #endif
@@ -295,7 +294,6 @@ class c_tunserver : public c_galaxy_node {
                 #endif
 		#if defined(ANTINET_macosx)
                 c_tun_device_apple m_tun_device;
-		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
                 #endif
@@ -310,6 +308,7 @@ class c_tunserver : public c_galaxy_node {
 		c_event_manager_empty m_event_manager;
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
+		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
                 shared_ptr< boost::program_options::variables_map > m_argm;
