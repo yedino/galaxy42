@@ -24,9 +24,6 @@
 
 class c_tuntap_system_functions final : public i_tuntap_system_functions {
 public:
-    c_tuntap_system_functions() = default;
-    ~c_tuntap_system_functions() = default;
-
     int ioctl(int fd, unsigned long request, void *ifreq) override;
 
     t_syserr NetPlatform_addAddress(const char* interfaceName,
@@ -104,7 +101,7 @@ private:
 
         type = htonl(AF_INET6);
 
-        iv[0].iov_base = static_cast<char *>(&type);
+        iv[0].iov_base = reinterpret_cast<char *>(type);
         iv[0].iov_len = sizeof (type);
         iv[1].iov_base = static_cast<void *>(&buf);
         iv[1].iov_len = len;
@@ -117,7 +114,7 @@ private:
         u_int32_t type;
         struct iovec iv[2];
 
-        iv[0].iov_base = static_cast<char *>(&type);
+        iv[0].iov_base = reinterpret_cast<char *>(type);
         iv[0].iov_len = sizeof (type);
         iv[1].iov_base = static_cast<void *>(&buf);
         iv[1].iov_len = len;
