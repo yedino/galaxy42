@@ -5,7 +5,7 @@
 
 #include "platform.hpp"
 
-#if defined(__linux__)
+#if defined(ANTINET_linux)
 #include "libs1.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -77,7 +77,7 @@ class c_ip46_addr { ///< any address ipv6 or ipv4, in lowest level - system sock
 		};
 
 		t_ip_data m_ip_data; ///< current ip either ipv4, or ipv6, including the port too
-		// int m_port; // port is inside m_ip_data
+		// unsigned short m_port; // port is inside m_ip_data
 		t_tag m_tag; ///< current type of address
 };
 #endif
@@ -101,7 +101,7 @@ class c_ip46_addr {
 		void set_port(int new_port);
 	private:
 		boost::asio::ip::address m_address;
-		int m_port = 9042;
+		unsigned short m_port = 9042;
 };
 #endif
 
@@ -143,7 +143,7 @@ class c_ip46_addr {
 
                 t_ip_data m_ip_data; ///< current ip either ipv4, or ipv6, including the port too
 		boost::asio::ip::address m_address;
-		int m_port = 9042;
+		unsigned short m_port = 9042;
                 t_tag m_tag;
 };
 #endif

@@ -139,7 +139,9 @@ c_udp_wrapper_bsd::c_udp_wrapper_bsd(const int listen_port)
 		pfp_warn("Socket is disabled, listen_port="<<listen_port);
 		return;
 	}
-	assert(m_socket >= 0);
+	if(m_socket < 0) {
+	    throw;
+	}
         c_ip46_addr anyport;
 	c_ip46_addr address_for_sock = anyport.any_on_port(listen_port);
 	int bind_result = -1;
@@ -182,7 +184,9 @@ c_udp_wrapper_bsd::c_udp_wrapper_bsd(const int listen_port)
             pfp_throw_error_sub( tuntap_error_devtun , errorstring.str() );
         }
 	
-	assert( bind_result >= 0 ); // TODO change to except
+	if(bind_result < 0) {
+	    throw;
+	}
 	assert(address_for_sock.get_ip_type() != c_ip46_addr::t_tag::tag_none);
 }
 

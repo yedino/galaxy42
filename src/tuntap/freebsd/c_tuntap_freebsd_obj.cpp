@@ -105,7 +105,7 @@ void c_tuntap_freebsd_obj::async_receive_from_tun(
     auto asio_handler = [data, handler](const boost::system::error_code& error, std::size_t bytes_transferred) {
         handler(data, bytes_transferred, error);
     };
-    return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
+    m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
 void c_tuntap_freebsd_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address,

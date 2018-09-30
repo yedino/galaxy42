@@ -4,6 +4,31 @@
 
 /////////////////////////////////////////////////////////////////////
 
+int c_tuntap_system_functions::ioctl(int fd, unsigned long request,  void *ifreq) {
+    pfp_UNUSED(fd);
+    pfp_UNUSED(request);
+    pfp_UNUSED(ifreq);
+    return 0;
+}
+
+t_syserr c_tuntap_system_functions::NetPlatform_addAddress(const char* interfaceName,
+                                        const uint8_t* address,
+                                        int prefixLen,
+                                        int addrFam) {
+    pfp_UNUSED(interfaceName);
+    pfp_UNUSED(address);
+    pfp_UNUSED(prefixLen);
+    pfp_UNUSED(addrFam);
+    return {0,0};
+}
+
+t_syserr c_tuntap_system_functions::NetPlatform_setMTU(const char* interfaceName,
+                                    uint32_t mtu) { 
+    pfp_UNUSED(interfaceName);
+    pfp_UNUSED(mtu);
+    return {0,0};
+}
+
 c_tuntap_netbsd_obj::c_tuntap_netbsd_obj() :
 	m_tun_fd(open("/dev/" IFNAME, O_RDWR)),
 	m_io_service(),

@@ -20,7 +20,6 @@
 #endif
 
 #if defined(ANTINET_freebsd)
-// TODO: clean
 struct prf_ra {
     u_char onlink : 1;
     u_char autonomous : 1;
@@ -699,7 +698,7 @@ c_tun_device_bsd::c_tun_device_bsd() :
     uint16_t scope;
 
     // previous tun ??
-    scope = htons((uint16_t)if_nametoindex(IFNAME));
+    scope = htons(static_cast<uint16_t>(if_nametoindex(IFNAME)));
     if(scope > 0) {
         int sock;
         pfp_warnn(IFNAME " exists");
@@ -744,7 +743,7 @@ c_tun_device_bsd::~c_tun_device_bsd()
     
     // XXX: duplicate code
     uint16_t scope;
-    scope = htons((uint16_t)if_nametoindex(IFNAME));
+    scope = htons(static_cast<uint16_t>(if_nametoindex(IFNAME)));
     if(scope > 0) { // XXX: uncomment in  future
         int sock;
         pfp_warnn(IFNAME " exists");
@@ -849,18 +848,16 @@ void c_tun_device_bsd::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &bin
     strncpy(ifa6.ifra_name, IFNAME, sizeof(ifa6.ifra_name));
     
     // convert addr6
-    static char *baData = new char[binary_address.size()];
-    for(size_t index = 0; index < binary_address.size(); index++) {
-        baData[index] = binary_address.at(index);
-    }
-        
+    char *baData = new char[binary_address.size()];
+    std::copy_n(binary_address.data(), binary_address.size(), baData);
+    
     ifa6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
     ifa6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
     
-    #define tempAddrIp6Len 128
-    static char tempAddrIp6[tempAddrIp6Len];
+    const size_t tempAddrIp6Len = 128;
+    std::array<char, tempAddrIp6Len> tempAddrIp6;
     pfp_goal("Setting addresses " \
-            << std::string(inet_ntop(AF_INET6, baData, tempAddrIp6, tempAddrIp6Len)) \
+            << std::string(inet_ntop(AF_INET6, baData, tempAddrIp6.data(), tempAddrIp6Len)) \
             << "/" \
             << prefixLen);
     
@@ -870,13 +867,15 @@ void c_tun_device_bsd::set_ipv6_address(const std::array<uint8_t, IPV6_LEN> &bin
     size_t toCopy = sizeof(ifa6.ifra_addr.sin6_addr);
     std::copy_n(baData, toCopy, reinterpret_cast<char *>(&ifa6.ifra_addr.sin6_addr));
 
+    delete baData;
+    
     // netmask - prefixlen
     ifa6.ifra_prefixmask.sin6_family = AF_INET6;
     ifa6.ifra_prefixmask.sin6_len = sizeof(struct sockaddr_in6);
     ipv6_mask(&ifa6.ifra_prefixmask.sin6_addr, prefixLen);
     
     // scope id in address
-    scope = htons((uint16_t)if_nametoindex(IFNAME));
+    scope = htons(static_cast<uint16_t>(if_nametoindex(IFNAME)));
     struct in6_addr *s6a1 = &ifa6.ifra_addr.sin6_addr;
     std::copy_n(&scope, sizeof(uint16_t), reinterpret_cast<char *>(&s6a1[2]));
     ifa6.ifra_addr.sin6_scope_id = 0;
@@ -928,7 +927,7 @@ bool c_tun_device_bsd::incomming_message_form_tun() {
 
 size_t c_tun_device_bsd::read_from_tun(void *buf, size_t count) {
     memset(buf, 0, count);
-    int rret = read_tun(m_tun_fd, buf, count);
+    size_t rret = read_tun(m_tun_fd, buf, count);
     if (rret < 0) {
 	perror("read_tun");
     } else {
@@ -939,7 +938,7 @@ size_t c_tun_device_bsd::read_from_tun(void *buf, size_t count) {
 }
 
 size_t c_tun_device_bsd::write_to_tun(void *buf, size_t count) {
-    int wret = write_tun(m_tun_fd, buf, count);
+    size_t wret = write_tun(m_tun_fd, buf, count);
     if(wret < 0) {
         perror("write_tun");
     } else {
@@ -949,8 +948,11 @@ size_t c_tun_device_bsd::write_to_tun(void *buf, size_t count) {
     return 0;
 }
 
-int c_tun_device_bsd::netbsd_modify_read_write_return(uint32_t len) {
+int c_tun_device_bsd::modify_read_write_return(uint32_t len) {
     if (len > 0) {
+	// we omit first 4 bytes (tuntap header)
+	// example we have 5b then return 1b
+	// else if tun/tap header is alone we dont have data (return 0b)
 	return len > sizeof(uint32_t) ? len - sizeof(uint32_t) : 0;
     } else {
 	return len;
@@ -968,7 +970,7 @@ int c_tun_device_bsd::write_tun(int tun0, void *buf, int len) {
     iv[1].iov_base = buf;
     iv[1].iov_len = len;
 
-    return netbsd_modify_read_write_return(writev(tun0, iv, 2));
+    return modify_read_write_return(writev(tun0, iv, 2));
 }
 
 int c_tun_device_bsd::read_tun(int tun0, void *buf, int len) {
@@ -980,7 +982,7 @@ int c_tun_device_bsd::read_tun(int tun0, void *buf, int len) {
     iv[1].iov_base = buf;
     iv[1].iov_len = len;
 
-    return netbsd_modify_read_write_return(readv(tun0, iv, 2));
+    return modify_read_write_return(readv(tun0, iv, 2));
 }
 
 int c_tun_device_bsd::ipv6_mask(struct in6_addr *mask, int len) {

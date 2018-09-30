@@ -276,12 +276,16 @@ c_ip46_addr::c_ip46_addr(const std::string &ip_addr, int port) {
 }
 
 void c_ip46_addr::set_ip4(sockaddr_in in4) {
-	assert(in4.sin_family == AF_INET);
+	if(in4.sin_family != AF_INET) {
+	    throw;
+	}
 	m_tag = t_tag::tag_ipv4;
 	this->m_ip_data.in4 = in4;
 }
 void c_ip46_addr::set_ip6(sockaddr_in6 in6) {
-	assert(in6.sin6_family == AF_INET6);
+	if(in6.sin6_family != AF_INET6) {
+	    throw;
+	}
 	m_tag = t_tag::tag_ipv6;
 	this->m_ip_data.in6 = in6;
 }

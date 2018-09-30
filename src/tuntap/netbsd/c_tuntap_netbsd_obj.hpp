@@ -22,37 +22,16 @@
 #include "../../i_tuntap_system_functions.hpp"
 
 class c_tuntap_system_functions final : public i_tuntap_system_functions {
-    public:
-        c_tuntap_system_functions() = default;
-        ~c_tuntap_system_functions() = default;
-        
-        int ioctl(int fd, unsigned long request,  void *ifreq) override 
-        { 
-            pfp_UNUSED(fd);
-            pfp_UNUSED(request);
-            pfp_UNUSED(ifreq);
-            return 0; 
-        };
+    public:        
+        int ioctl(int fd, unsigned long request,  void *ifreq) override;
         
         t_syserr NetPlatform_addAddress(const char* interfaceName,
                                         const uint8_t* address,
                                         int prefixLen,
-                                        int addrFam) override 
-        { 
-            pfp_UNUSED(interfaceName);
-            pfp_UNUSED(address);
-            pfp_UNUSED(prefixLen);
-            pfp_UNUSED(addrFam);
-            return {0,0}; 
-        };
+                                        int addrFam) override;
                                         
         t_syserr NetPlatform_setMTU(const char* interfaceName,
-                                    uint32_t mtu) override 
-        { 
-            pfp_UNUSED(interfaceName);
-            pfp_UNUSED(mtu);
-            return {0,0}; 
-        };
+                                    uint32_t mtu) override;
 };
 
 class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
@@ -105,7 +84,7 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
 	private:
             // start: from openvpn tun
             static inline int
-            netbsd_modify_read_write_return(u_int32_t len) {
+            modify_read_write_return(u_int32_t len) {
                 if (len > 0) {
                     return len > sizeof(u_int32_t) ? len - sizeof(u_int32_t) : 0;
                 } else {
@@ -121,12 +100,12 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
 
                 type = htonl(AF_INET6);
 
-                iv[0].iov_base = (char *)&type;
+                iv[0].iov_base = reinterpret_cast<char *>(type);
                 iv[0].iov_len = sizeof(type);
-                iv[1].iov_base = (void *)buf;
+                iv[1].iov_base = static_cast<void *>(&buf);
                 iv[1].iov_len = len;
 
-                return netbsd_modify_read_write_return(writev(tun0, iv, 2));
+                return modify_read_write_return(writev(tun0, iv, 2));
             }
 
             int
@@ -135,12 +114,12 @@ class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
                 u_int32_t type;
                 struct iovec iv[2];
 
-                iv[0].iov_base = (char *)&type;
+                iv[0].iov_base = reinterpret_cast<char *>(type);
                 iv[0].iov_len = sizeof(type);
-                iv[1].iov_base = (void *)buf;
+                iv[1].iov_base = static_cast<void *>(&buf);
                 iv[1].iov_len = len;
 
-                return netbsd_modify_read_write_return(readv(tun0, iv, 2));
+                return modify_read_write_return(readv(tun0, iv, 2));
             }
             // end: from openvpn tun
             
