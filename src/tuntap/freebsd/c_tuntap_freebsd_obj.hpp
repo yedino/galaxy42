@@ -93,7 +93,7 @@ class c_tuntap_freebsd_obj final : public c_tuntap_base_obj {
 
                 type = htonl(AF_INET6);
 
-                iv[0].iov_base = static_cast<char *>(&type);
+                iv[0].iov_base = reinterpret_cast<char *>(type);
                 iv[0].iov_len = sizeof(type);
                 iv[1].iov_base = static_cast<void *>(&buf);
                 iv[1].iov_len = len;
@@ -107,7 +107,7 @@ class c_tuntap_freebsd_obj final : public c_tuntap_base_obj {
                 u_int32_t type;
                 struct iovec iv[2];
 
-                iv[0].iov_base = static_cast<char *>(&type);
+                iv[0].iov_base = reinterpret_cast<char *>(type);
                 iv[0].iov_len = sizeof(type);
                 iv[1].iov_base = static_cast<void *>(&buf);
                 iv[1].iov_len = len;
