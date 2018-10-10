@@ -26,8 +26,6 @@ echo "Downloading (git submodule) now:"
 echo "Security: relax, this downloads are always validated by strong cryptographic checksum as git uses, e.g. SHA1 :)";
 echo "PLEASE WAIT... downloading from git"
 
-set -x
-
 git submodule init || { echo "Error: submodules download failed (init);" ; exit 1 ; }
 
 # needed because maybe work directory has old version connected to old git path
@@ -35,9 +33,5 @@ git submodule sync || { echo "Error: submodules download failed (sync);" ; exit 
 
 git submodule update || { echo "Error: submodules download failed (update)." ; exit 1 ; }
 
-set +x
-
 echo "OK - download done"
-
-
 

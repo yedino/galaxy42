@@ -1,10 +1,9 @@
-
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
 
 #pragma once
 
 /// @owner owner_of_file
-
+#include "platform.hpp"
 #include "galaxysrv.hpp"
 #include "galaxysrv_peers.hpp"
 #include "galaxysrv_cables.hpp"
@@ -38,13 +37,25 @@
 #ifdef HTTP_DBG
 #include "httpdbg/httpdbg-server.hpp"
 #endif
-
 #include "tuntap/base/tuntap_base.hpp"
+#if defined(ANTINET_linux)
 #include "tuntap/linux/c_tuntap_linux_obj.hpp"
+#endif
+#if defined(ANTINET_windows)
 #include "tuntap/windows/c_tuntap_windows.hpp"
+#endif
+#if defined(ANTINET_macosx)
 #include "tuntap/macosx/c_tuntap_macosx_obj.hpp"
-
-#include "platform.hpp"
+#endif
+#if defined(ANTINET_netbsd)
+#include "tuntap/netbsd/c_tuntap_netbsd_obj.hpp"
+#endif
+#if defined(ANTINET_openbsd)
+#include "tuntap/openbsd/c_tuntap_openbsd_obj.hpp"
+#endif
+#if defined(ANTINET_freebsd)
+#include "tuntap/freebsd/c_tuntap_freebsd_obj.hpp"
+#endif
 
 #include "netbuf.hpp"
 
@@ -52,8 +63,8 @@
 /// @owner magaNet_user
 class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2p, c_galaxysrv_e2e, c_galaxysrv_engine {
 	public:
-		c_galaxysrv()=default;
-		virtual ~c_galaxysrv()=default;
+		c_galaxysrv() = default;
+		virtual ~c_galaxysrv() = default;
 
 		/// load my (this node's) keypair from it's default store (e.g. config files)
 		/// if your files seem to not be yet created, then throws expected_not_found
@@ -97,13 +108,25 @@ class c_galaxysrv : public c_galaxysrv_peers, c_galaxysrv_cables, c_galaxysrv_p2
 
 		/// @name tuntap access
 		/// @{
-		#ifdef ANTINET_linux
+		#if defined(ANTINET_linux)
 			c_tuntap_linux_obj m_tuntap;
-		#elif defined(ANTINET_windows)
+                #endif
+		#if defined(ANTINET_windows)
 			c_tuntap_windows_obj m_tuntap;
-		#elif defined(ANTINET_macosx)
+                #endif
+                #if defined(ANTINET_macosx)
 			c_tuntap_macosx_obj m_tuntap;
-		#else
+                #endif
+                #if defined(ANTINET_netbsd)
+                        c_tuntap_netbsd_obj m_tuntap;
+                #endif
+                #if defined(ANTINET_openbsd)
+                        c_tuntap_openbsd_obj m_tuntap;
+                #endif
+                #if defined(ANTINET_freebsd)
+                        c_tuntap_freebsd_obj m_tuntap;
+                #endif
+                #if defined(EMPTY)
 			#error "This platform is not supported"
 		#endif
 		/// @}

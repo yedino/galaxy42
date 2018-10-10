@@ -1,6 +1,6 @@
 #include "platform.hpp"
-#if defined(ANTINET_freebsd)
-#include "c_tuntap_freebsd_obj.hpp"
+#if defined(ANTINET_netbsd)
+#include "c_tuntap_netbsd_obj.hpp"
 
 /////////////////////////////////////////////////////////////////////
 
@@ -29,7 +29,7 @@ t_syserr c_tuntap_system_functions::NetPlatform_setMTU(const char* interfaceName
     return {0,0};
 }
 
-c_tuntap_freebsd_obj::c_tuntap_freebsd_obj() :
+c_tuntap_netbsd_obj::c_tuntap_netbsd_obj() :
 	m_tun_fd(open("/dev/" IFNAME, O_RDWR)),
 	m_io_service(),
 	m_tun_stream(m_io_service, m_tun_fd) 
@@ -41,7 +41,7 @@ c_tuntap_freebsd_obj::c_tuntap_freebsd_obj() :
     pfp_goal("tuntap is opened correctly");
 }
 
-c_tuntap_freebsd_obj::c_tuntap_freebsd_obj(boost::asio::io_service &io_service) :
+c_tuntap_netbsd_obj::c_tuntap_netbsd_obj(boost::asio::io_service &io_service) :
 	m_tun_fd(open("/dev/" IFNAME, O_RDWR)),
 	m_io_service(),
 	m_tun_stream(io_service, m_tun_fd)
@@ -53,14 +53,14 @@ c_tuntap_freebsd_obj::c_tuntap_freebsd_obj(boost::asio::io_service &io_service) 
     pfp_goal("tuntap is opened correctly");
 }
 
-c_tuntap_freebsd_obj::~c_tuntap_freebsd_obj() 
+c_tuntap_netbsd_obj::~c_tuntap_netbsd_obj() 
 {
     pfp_goal("Close " IFNAME);
     close(m_tun_fd);
 }
 
 
-size_t c_tuntap_freebsd_obj::send_to_tun(
+size_t c_tuntap_netbsd_obj::send_to_tun(
         const unsigned char *data, 
         size_t size
 ) {
@@ -72,7 +72,7 @@ size_t c_tuntap_freebsd_obj::send_to_tun(
     }
 }
 
-size_t c_tuntap_freebsd_obj::send_to_tun_separated_addresses(
+size_t c_tuntap_netbsd_obj::send_to_tun_separated_addresses(
         const unsigned char *const data, 
         size_t size,
         const std::array<unsigned char, IPV6_LEN> &src_binary_address,
@@ -88,7 +88,7 @@ size_t c_tuntap_freebsd_obj::send_to_tun_separated_addresses(
 	return m_tun_stream.write_some(buffers, ec);
 }
 
-size_t c_tuntap_freebsd_obj::read_from_tun(
+size_t c_tuntap_netbsd_obj::read_from_tun(
         unsigned char *const data, 
         size_t size
 ) {
@@ -100,7 +100,7 @@ size_t c_tuntap_freebsd_obj::read_from_tun(
     }
 }
 
-size_t c_tuntap_freebsd_obj::read_from_tun_separated_addresses(
+size_t c_tuntap_netbsd_obj::read_from_tun_separated_addresses(
         unsigned char *const data, 
         size_t size,
 	std::array<unsigned char, IPV6_LEN> &src_binary_address,
@@ -122,7 +122,7 @@ size_t c_tuntap_freebsd_obj::read_from_tun_separated_addresses(
     }
 }
 
-void c_tuntap_freebsd_obj::async_receive_from_tun(
+void c_tuntap_netbsd_obj::async_receive_from_tun(
         unsigned char *const data,
         size_t size,
         const c_tuntap_base_obj::read_handler & handler
@@ -130,10 +130,10 @@ void c_tuntap_freebsd_obj::async_receive_from_tun(
     auto asio_handler = [data, handler](const boost::system::error_code& error, std::size_t bytes_transferred) {
         handler(data, bytes_transferred, error);
     };
-    m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
+    return m_tun_stream.async_read_some(boost::asio::buffer(data, size), asio_handler);
 }
 
-void c_tuntap_freebsd_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address,
+void c_tuntap_netbsd_obj::set_tun_parameters(const std::array<unsigned char, IPV6_LEN> &binary_address,
                                             int prefix_len,
                                             uint32_t mtu)
 {

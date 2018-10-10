@@ -1,21 +1,28 @@
-#ifndef C_FREEBSD_TUNTAP_OBJ_HPP
-#define C_FREEBSD_TUNTAP_OBJ_HPP
+#ifndef C_TUNTAP_NETBSD_OBJ_HPP
+#define C_TUNTAP_NETBSD_OBJ_HPP
 
 #include "platform.hpp"
 
-#if defined(ANTINET_freebsd)
+#if defined(ANTINET_netbsd)
 
-#include "../base/tuntap_base.hpp"
 #include <boost/asio.hpp>
 #include <libs0.hpp>
+
+#include <sys/socket.h>
+#include <net/if_tun.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/nd6.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include "c_tun_device.hpp"
+
+#include "../base/tuntap_base.hpp"
 #include "../../test/mock_posix_stream_descriptor.hpp"
 #include "../../test/mock_tuntap_system_functions.hpp"
 #include "../../i_tuntap_system_functions.hpp"
 
-#include "c_tun_device.hpp"
-
 class c_tuntap_system_functions final : public i_tuntap_system_functions {
-    public:
+    public:        
         int ioctl(int fd, unsigned long request,  void *ifreq) override;
         
         t_syserr NetPlatform_addAddress(const char* interfaceName,
@@ -27,14 +34,14 @@ class c_tuntap_system_functions final : public i_tuntap_system_functions {
                                     uint32_t mtu) override;
 };
 
-class c_tuntap_freebsd_obj final : public c_tuntap_base_obj {
+class c_tuntap_netbsd_obj final : public c_tuntap_base_obj {
     using sys_functions_wrapper = c_tuntap_system_functions;
     using stream_type = boost::asio::posix::stream_descriptor;
     
     public:
-        c_tuntap_freebsd_obj(); ///< construct this object, throws if error
-        c_tuntap_freebsd_obj(boost::asio::io_service &io_service);
-        ~c_tuntap_freebsd_obj();
+        c_tuntap_netbsd_obj(); ///< construct this object, throws if error
+        c_tuntap_netbsd_obj(boost::asio::io_service &io_service);
+        ~c_tuntap_netbsd_obj();
 
         size_t send_to_tun(
             const unsigned char *data, 
@@ -146,7 +153,6 @@ class c_tuntap_freebsd_obj final : public c_tuntap_base_obj {
             sys_functions_wrapper               sys_fun;
             c_tun_device_bsd                    tundn;
 };
-
 #endif
 
-#endif
+#endif /* C_TUNTAP_NETBSD_OBJ_HPP */

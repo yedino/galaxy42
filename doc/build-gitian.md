@@ -1,10 +1,12 @@
-### This is just for information!
+### This is for developers.
 
 This file describes details of using Gitian.
 This is for INFORMATION ONLY - usually you should just run ./install.sh
-and then use ./build-gitian scripts).
+and then use ./build-gitian scripts) as a user who just wants to build using Gitian.
 
 Also see doc/gitian-instructions.txt for more info.
+
+Also see doc/build-gitian-dev.md for
 
 ### Usage
 
@@ -12,20 +14,17 @@ Use the command in top-directory:
 `./build-gitian`
 and follow the instructions.
 
-### Gitian FAQ and common problems
+### Overview
 
-Q: Error `lxc-execute: cgroupfs failed to detect cgroup metadata`
-A: Aptitude install (as root of course, on the computer that is trying to run gbuild or lxc-execute) a package "cgroupfs-mount".
-
-### How this works, call tree
+How this works, call tree and overview
 
 
 ./install and so on - to get dependencies for Gitian building
 
 ./build-gitian
 	bash functions:
-	works in ~/var-gitian/ ! (logs are there etc)
-	gitian_builder_download() - downloads Gitian (e.g. in our version)
+	works in ~/var-gitian*/ ! (logs are there too etc)
+	gitian_builder_download() - downloads Gitian software itself (e.g. in our version, patched as needed)
 	gitian_builder_make_lxc_image() - ask Gitian to create image of LXC container
 		.../gitian-builder/bin/bin/make-base-vm
 			...
@@ -34,7 +33,7 @@ A: Aptitude install (as root of course, on the computer that is trying to run gb
 	target_download() - downloads the project version from Git
 	gitian_run_build() - run main Gitian build
 		.../gitian-builder/gbuild
-			inside LXC:
+			inside LXC: (from this point you can run commands manually with `./build-gitian ... on-target[-root]`)
 			we have Galaxy (in some version!) in /home/ubuntu/build/galaxy42/
 				run script as in .yml ./contrib/gitian-descriptors/main-build/galaxy-windows.yml
 					./galaxy42/contrib/gitian-descriptors/main-build/galaxy-windows-script
@@ -46,6 +45,16 @@ A: Aptitude install (as root of course, on the computer that is trying to run gb
 							cmake
 								build sodiumpp (our version) -> cmake
 							build actually our program
+
+
+
+--- FAQ ---
+
+
+Q: Error `lxc-execute: cgroupfs failed to detect cgroup metadata`
+A: Aptitude install (as root of course, on the computer that is trying to run gbuild or lxc-execute) a package "cgroupfs-mount".
+
+
 
 Q: Error ` No such file or directory - failed to get real path for '.../target-foo-amd64`
 

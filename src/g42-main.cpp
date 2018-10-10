@@ -1,4 +1,5 @@
 // Copyrighted (C) 2015-2018 Antinet.org team, see file LICENCE-by-Antinet.txt
+#include "platform.hpp"
 #include "the_program.hpp"
 #include "the_program_tunserver.hpp"
 #include "the_program_newloop.hpp"
@@ -303,152 +304,162 @@ void main_print_flavour() {
 
 
 int main(int argc, const char * const * argv) { // the main() function
-	// parse early options:
-	// this is done very early, we do not use console, nor boost program_options etc
-	string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
-	vector<string> argt; // args (without exec name)
-	for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
-	bool early_debug = contains_value(argt, "--d");
+	// global try
+	try {
+		// parse early options:
+		// this is done very early, we do not use console, nor boost program_options etc
+		string argt_exec = (argc>=1) ? argv[0] : ""; // exec name
+		vector<string> argt; // args (without exec name)
+		for (int i=1; i<argc; ++i) argt.push_back(argv[i]);
+		bool early_debug = contains_value(argt, "--d");
 
-	if (contains_value(argt,"--print-flags-flavour")) {
-		main_print_flavour();
-		return 0; // <--- exit
-	}
+		if (contains_value(argt,"--print-flags-flavour")) {
+			main_print_flavour();
+			return 0; // <--- exit
+		}
 
 
-	try{
-		auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
-		if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
-	}catch (...){
-		std::cerr<<"Error: setlocale."<<std::endl;
-	}
+		try{
+			auto *result = std::setlocale(LC_ALL, "en_US.UTF-8");
+			if (result == nullptr) throw std::runtime_error("Can not set locale (first)");
+		}catch (...){
+			std::cerr<<"Error: setlocale."<<std::endl;
+		}
 
-	// This code MUST be 1-thread and very early in main
-	#ifdef ENABLE_LIB_CURL
-	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-	if(res != CURLE_OK) {
+		// This code MUST be 1-thread and very early in main
+		#ifdef ENABLE_LIB_CURL
+		CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
+		if(res != CURLE_OK) {
+			bitcoin_node_cli::curl_initialized=false;
+			std::cerr<<"Error: lib curl init."<<std::endl;
+		}
+		else{
+			bitcoin_node_cli::curl_initialized=true;
+		}
+		#else
+			std::cerr<<"Warning: lib curl is disabled."<<std::endl;
+		#endif
+
+		enum class t_program_type {
+			e_program_type_tunserver = 1,
+			e_program_type_newloop = 100,
+		};
+
+		const t_program_type program_type = [&argt] {
+			if (remove_and_count(argt, "--newloop" ))
+				return t_program_type::e_program_type_newloop;
+			else
+				return t_program_type::e_program_type_tunserver;
+		}();
+
+		unique_ptr<c_the_program> the_program = nullptr;
+		switch (program_type) {
+			case t_program_type::e_program_type_tunserver:
+				the_program = make_unique<c_the_program_tunserver>();
+			break;
+			case t_program_type::e_program_type_newloop:
+				the_program = make_unique<c_the_program_newloop>();
+			break;
+			default: break;
+		}
+
+		if (!the_program) {
+			_early_cerr("Programming error: not supported program type.");
+			return 1;
+		}
+
+		the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
+		the_program->startup_console_first();
+		the_program->startup_locales_early();
+		the_program->startup_data_dir();
+		the_program->startup_curl();
+		the_program->startup_version();
+		the_program->startup_locales_later();
+		the_program->init_library_sodium();
+
+		g_dbg_level = 60;
+		if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
+
+		if ( remove_and_count(argt,"--mode-bench") ) {
+			c_string_string_Cstyle args_cstyle( argt_exec , argt );
+			const int again_argc = args_cstyle.get_argc();
+			const char ** again_argv = args_cstyle.get_argv();
+			return n_netmodel::netmodel_main( again_argc , again_argv );
+		}
+
+		my_cap::drop_root(remove_and_count(argt, "--home-env" )); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
+
+		my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
+		// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
+		// to report any problems with CAPs (eg compatibility issues),
+		// and we expect to have no exploitable code in this short code to setup console and show version
+		// (especially as none of it depends on user provided inputs)
+
+		{
+			bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
+			if (done) return ret;
+		}
+
+		the_program->options_create_desc();
+
+		the_program->options_parse_first();
+		the_program->options_multioptions();
+		the_program->options_done();
+
+		{
+			bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();
+			if (done) return ret;
+		}
+
+		int exit_code=1;
+		bool exception_catched = true;
+		try {
+
+			exit_code = the_program->main_execution(); // <---
+			exception_catched = false;
+
+		} // try running server
+		catch(const ui::exception_error_exit &) {
+			pfp_erro( mo_file_reader::gettext("L_exiting_explained_above") );
+			exit_code = 1;
+		}
+		catch(const capmodpp::capmodpp_error & e) {
+			pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+				<< "(capmodpp_error) "
+				<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+			exit_code = 2;
+		}
+		catch(const std::exception& e) {
+			pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
+				<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
+			exit_code = 2;
+		}
+		catch(...) {
+			pfp_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
+			exit_code = 3;
+		}
+
+		try {
+			if( !exception_catched )
+				pfp_note(mo_file_reader::gettext("L_exit_no_error"));
+		}
+		catch(...) {
+			std::cerr<<"(Error in printing previous error)";
+		}
+
+		#ifdef ENABLE_LIB_CURL
+			curl_global_cleanup();
+		#endif
 		bitcoin_node_cli::curl_initialized=false;
-		std::cerr<<"Error: lib curl init."<<std::endl;
-	}
-	else{
-		bitcoin_node_cli::curl_initialized=true;
-	}
-	#else
-		std::cerr<<"Warning: lib curl is disabled."<<std::endl;
-	#endif
 
-	enum class t_program_type {
-		e_program_type_tunserver = 1,
-		e_program_type_newloop = 100,
-	};
-
-	const t_program_type program_type = [&argt] {
-		if (remove_and_count(argt, "--newloop" ))
-			return t_program_type::e_program_type_newloop;
-		else
-			return t_program_type::e_program_type_tunserver;
-	}();
-
-	unique_ptr<c_the_program> the_program = nullptr;
-	switch (program_type) {
-		case t_program_type::e_program_type_tunserver:
-			the_program = make_unique<c_the_program_tunserver>();
-		break;
-		case t_program_type::e_program_type_newloop:
-			the_program = make_unique<c_the_program_newloop>();
-		break;
-		default: break;
-	}
-
-	if (!the_program) {
-		_early_cerr("Programming error: not supported program type.");
-		return 1;
-	}
-
-	the_program->take_args(argt_exec , argt); // takes again args, with removed special early args
-	the_program->startup_console_first();
-	the_program->startup_locales_early();
-	the_program->startup_data_dir();
-	the_program->startup_curl();
-	the_program->startup_version();
-	the_program->startup_locales_later();
-	the_program->init_library_sodium();
-
-	g_dbg_level = 60;
-	if (early_debug) g_dbg_level_set(20, mo_file_reader::gettext("L_early_debug_comand_line"));
-
-	if ( remove_and_count(argt,"--mode-bench") ) {
-		c_string_string_Cstyle args_cstyle( argt_exec , argt );
-		const int again_argc = args_cstyle.get_argc();
-		const char ** again_argv = args_cstyle.get_argv();
-		return n_netmodel::netmodel_main( again_argc , again_argv );
-	}
-
-	my_cap::drop_root(remove_and_count(argt, "--home-env" )); // [SECURITY] if we are started as root, then here drop the UID/GID (we retain CAPs).
-
-	my_cap::drop_privileges_on_startup(); // [SECURITY] drop unneeded privileges (more will be dropped later)
-	// we drop privilages here, quite soon on startup. Not before, because we choose to have configured console
-	// to report any problems with CAPs (eg compatibility issues),
-	// and we expect to have no exploitable code in this short code to setup console and show version
-	// (especially as none of it depends on user provided inputs)
-
-	{
-		bool done; int ret; std::tie(done,ret) = the_program->program_startup_special();
-		if (done) return ret;
-	}
-
-	the_program->options_create_desc();
-
-	the_program->options_parse_first();
-	the_program->options_multioptions();
-	the_program->options_done();
-
-	{
-		bool done; int ret; std::tie(done,ret) = the_program->options_commands_run();
-		if (done) return ret;
-	}
-
-	int exit_code=1;
-	bool exception_catched = true;
-	try {
-
-		exit_code = the_program->main_execution(); // <---
-		exception_catched = false;
-
-	} // try running server
-	catch(const ui::exception_error_exit &) {
-		pfp_erro( mo_file_reader::gettext("L_exiting_explained_above") );
-		exit_code = 1;
-	}
-	catch(const capmodpp::capmodpp_error & e) {
-		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-			<< "(capmodpp_error) "
-			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		exit_code = 2;
-	}
-	catch(const std::exception& e) {
-		pfp_erro( mo_file_reader::gettext("L_unhandled_exception_running_server") << ' '
-			<< e.what() << mo_file_reader::gettext("L_exit_aplication") );
-		exit_code = 2;
-	}
-	catch(...) {
+		return exit_code;
+	} catch (const std::exception &e) {
+		pfp_erro( mo_file_reader::gettext("L_unhandled_exception") << ' '
+			<< e.what() << ' ' << mo_file_reader::gettext("L_exit_aplication") );
+		return -1;
+	} catch (...) {
 		pfp_erro( mo_file_reader::gettext("L_unknown_exception_running_server") );
-		exit_code = 3;
-	}
-
-	try {
-		if( !exception_catched )
-			pfp_note(mo_file_reader::gettext("L_exit_no_error"));
-	}
-	catch(...) {
-		std::cerr<<"(Error in printing previous error)";
-	}
-
-	#ifdef ENABLE_LIB_CURL
-		curl_global_cleanup();
-	#endif
-	bitcoin_node_cli::curl_initialized=false;
-
-	return exit_code;
-}
+		return -1;
+	} // catch
+} // main
 

@@ -282,30 +282,36 @@ class c_tunserver : public c_galaxy_node {
         #endif
 		string m_my_name; ///< a nice name, see set_my_name
 		//int m_tun_fd; ///< fd of TUN file
-		#ifdef __linux__
-
+                #if defined(ANTINET_linux)
 		c_tun_device_linux m_tun_device;
-		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
-
 		c_udp_wrapper_linux m_udp_device;
 		c_event_manager_linux m_event_manager;
-		#elif defined(_WIN32) || defined(__CYGWIN__)
+                #endif
+		#if defined(ANTINET_windows)
 		c_tun_device_windows m_tun_device;
 		c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#elif defined(__MACH__)
+                #endif
+		#if defined(ANTINET_macosx)
                 c_tun_device_apple m_tun_device;
                 c_udp_wrapper_asio m_udp_device;
                 c_event_manager_asio m_event_manager;
-		#else
+                #endif
+                #if defined(ANTINET_netbsd) || defined(ANTINET_openbsd) || defined(ANTINET_freebsd)
+                c_tun_device_bsd m_tun_device;
+                c_udp_wrapper_bsd m_udp_device;
+                c_event_manager_bsd m_event_manager;
+                #endif
+		#if defined (EMPTY)
 		c_tun_device_empty m_tun_device;
 		c_udp_wrapper_empty m_udp_device;
 		c_event_manager_empty m_event_manager;
 		#endif
 		unsigned char m_tun_header_offset_ipv6; ///< current offset in TUN/TAP data to the position of ipv6
+		bool m_tun_allow_init_failure=false; ///< allow failure of TUN init (e.g. on systems without tuntap) and to continue without tun, to just eg route data
 
 		shared_ptr< boost::program_options::options_description > m_desc; ///< The boost program options that I will be using. (Needed for some internal commands)
-        shared_ptr< boost::program_options::variables_map > m_argm;
+                shared_ptr< boost::program_options::variables_map > m_argm;
 //		int m_sock_udp; ///< the main network socket (UDP listen, send UDP to each peer)
 
 		fd_set m_fd_set_data; ///< select events e.g. wait for UDP peering or TUN input
@@ -360,7 +366,6 @@ class c_tunserver : public c_galaxy_node {
 		bool check_packet_source_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet);
 
 		bool check_packet_address(const std::array<uint8_t, 16> &address_expected, const std::string &packet, const size_t offset);
-
 
 		c_rpc_server m_rpc_server;
 		nlohmann::json rpc_ping(const std::string &input_json);

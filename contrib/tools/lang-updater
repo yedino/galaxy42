@@ -44,6 +44,7 @@ textdomain=""
 sourcefile=""
 mainfile_messages_pot=""
 opt_notcare=0
+other_options=""
 
 list_of_languages="pl en ru uk" # <--- add here more languages
 
@@ -51,6 +52,10 @@ list_of_languages="pl en ru uk" # <--- add here more languages
 MYTMP="vartmp/lang-updater/" ; rm -rf "$MYTMP" ; mkdir -p "$MYTMP" || fail "Temp dir"
 
 function do_compile() {
+	if [[ "${platform}" == "gnu_linux" ]]
+	then
+		other_options="--endianness=little"
+	fi
 	for lang in $list_of_languages
 	do
 		input_file="src-misc/locale/${textdomain}/${lang}.po"
@@ -58,7 +63,7 @@ function do_compile() {
 		mkdir -p "./share/locale/${lang}/LC_MESSAGES/" || {
 			fail "Can not create directory for mo file."
 		}
-		msgfmt --endianness=little "$input_file" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
+		msgfmt ${other_options} "$input_file" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || {
 			echo "Can not convert a po file to mo ($input_file)"
 			if (( opt_notcare )) ; then
 				echo "skipping"
@@ -81,7 +86,7 @@ function lang_new_and_translate() {
 			continue
 		}
 		$EDITOR "src-misc/locale/${textdomain}/${lang}.po" || continue
-		msgfmt --endianness=little "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt for lang=$lang"
+		msgfmt ${other_options} "src-misc/locale/${textdomain}/${lang}.po" -o "./share/locale/${lang}/LC_MESSAGES/${textdomain}.mo" || fail "msgfmt for lang=$lang"
 	done
 }
 
@@ -170,7 +175,4 @@ fi
 if ((cmd_compile)) ; then
 	do_compile
 fi
-
-
-
 

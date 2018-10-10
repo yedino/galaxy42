@@ -4,7 +4,6 @@
 set -o errexit
 set -o nounset
 
-
 # source global variables
 source "${HOME}/build/galaxy42/contrib/gitian-descriptors/gitian_global-variables"
 
@@ -12,15 +11,17 @@ export readonly TARGET_ARCH="x86_64-linux-gnu"
 export FAKETIME="$REFERENCE_DATETIME"
 
 # import functions
-. "${GALAXY_DIR}"/share/script/lib/fail.sh
-. "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
-. "${GALAXY_DIR}"/share/script/lib/fdfix.sh
+source "${GALAXY_DIR}"/share/script/lib/fail.sh
+source "${GALAXY_DIR}"/share/script/lib/create_faketime_wrappers.sh
+source "${GALAXY_DIR}"/share/script/lib/fdfix.sh
 
 # fix for /dev/fd
 fdfix
 
 # variable from above yml config
 echo -e "\nStarted $0 with: FAKETIME=${FAKETIME} OUTDIR=$OUTDIR in PWD=$PWD\n"
+[[ -z "$OUTDIR" ]] && fail "OUTDIR is not configured for some reason"
+[[ -z "$PROJECT_NAME" ]] && fail "PROJECT_NAME is not configured for some reason"
 # debug
 
 ### <LICENCE> - start of licence block - this code if possibly on other licence:
@@ -140,8 +141,12 @@ echo "\nAll done regarding boost.\n"
 
 
 # *** main build starts here ***
+printf "\n\n=========================================================================\n\n"
 pushd "${GALAXY_DIR}" || fail
+	printf "\n\n-------------------------------------------------------------------------\n\n"
 	echo -e "\n\nDoing the build, inside Gitian in PWD=$PWD\n\n"
+
+
 
 	git clean -fdx
 	# make dist # delete
@@ -149,13 +154,18 @@ pushd "${GALAXY_DIR}" || fail
 	EXTLEVEL=0 \
 	BUILD_STATIC=1 \
 	BUILD_SET_BOOST_ROOT="${BOOST_BUILD_DIR}" \
+	# this also executes the cmake:
+	print "Calling our ($PROJECT_NAME) ./do script (should include cmake) "
 	./do --go \
 		|| fail "Failed to do the main build of our project"
 
-	echo -e "\n\nBuild is done.\n\n"
+	print "Completed our ($PROJECT_NAME) build."
+	printf "\n\n-------------------------------------------------------------------------\n\n"
 popd
 
-echo -e "\n\nBuild will start the linux packer.\n"
+
+printf "\n\n=========================================================================\n\n"
+echo -e "\n\nBuild will start the linux packer. OUTDIR=$OUTDIR\n"
 pushd "${GALAXY_DIR}" || fail
 	echo "In PWD=$PWD"
 	contrib/tools/build-pack-linux.sh "gitian" || fail "Can not pack the build results"

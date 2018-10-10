@@ -17,8 +17,6 @@ endif()
 
 ########################### CMAKE MODULES ###########################
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
-include(cotire)
 
 if(MINGW)
 	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
@@ -201,12 +199,16 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (CMAKE_VERSION VERSION_LESS 3.1)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
+if(CMAKE_VERSION VERSION_LESS 3.1)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++${CMAKE_CXX_STANDARD}") # [[version]] needed for Debian 8
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -fdiagnostics-color=always")
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
+		message(STATUS "Possible compilation fault on OpenBSD, add -ftrack-macro-expansion=0 flag to CXX_FLAGS")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrack-macro-expansion=0")
+	endif()
 	set(WARN_PEDANTIC_FLAGS "-Wall -Wextra -pedantic -Wnoexcept -Wstrict-null-sentinel -Wlogical-op")
 	set(WARN_PEDANTIC_FLAGS "${WARN_PEDANTIC_FLAGS} -Wreturn-type")
 	set(WARN_PEDANTIC_FLAGS_FOR_C "-Wall") # mostly used by dependencies
@@ -216,8 +218,10 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 	if(APPLE)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 		set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libc++")
-	endif()
-
+	elseif(UNIX)
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+                set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -stdlib=libstdc++")
+        endif()
 	### clang sanitizers ###
 	option(SANITIZER_THREAD "Enable TSAN - clang thread sanitizer" OFF)
 	option(SANITIZER_ADDRESS "Enable ASAN - clang address sanitizer" OFF)
@@ -431,10 +435,64 @@ include_directories( src-tools/netmodel/ )
 
 file(GLOB SOURCES_GROUP_CRYPTO src/crypto/*.cpp)
 
-file(GLOB SOURCES_GROUP_TUNSERVER src/* src/httpdbg/* src/utils/* src/stdplus/* src/cable/* src/cable/base/* src/cable/simulation/* src/cable/udp/*
-	src/cable/shm/cable_shm_addr.cpp *src/tuntap/base/* src/tuntap/linux/* src/tuntap/windows/* src/tuntap/macosx/* src/tuntap/fake_tun/*
-	src/test/special_behaviour/*
+file(GLOB SOURCES_GROUP_TUNSERVER
+    src/* 
+    src/httpdbg/* 
+    src/utils/* 
+    src/stdplus/* 
+    src/cable/* 
+    src/cable/base/* 
+    src/cable/simulation/* 
+    src/cable/udp/*
+    src/cable/shm/cable_shm_addr.cpp 
+    src/tuntap/base/*
+    src/tuntap/fake_tun/* 
+    src/test/special_behaviour/*
 )
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+	file(GLOB SOURCES_TUNTAP_DRIVER
+		src/tuntap/linux/*
+		)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_linux")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_linux")
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "NetBSD")
+	file(GLOB SOURCES_TUNTAP_DRIVER 
+		src/tuntap/netbsd/*
+		)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_netbsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_netbsd")
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
+	file(GLOB SOURCES_TUNTAP_DRIVER
+                src/tuntap/openbsd/*
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_openbsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_openbsd")
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
+        file(GLOB SOURCES_TUNTAP_DRIVER
+                src/tuntap/freebsd/*
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_freebsd")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_freebsd")
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows" OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
+	file(GLOB SOURCES_TUNTAP_DRIVER
+                src/tuntap/windows/*
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_windows")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_windows")
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+	file(GLOB SOURCES_TUNTAP_DRIVER
+                src/tuntap/macosx/*
+                )
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_macosx")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_macosx")
+endif()
+
 list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/ipclient.cpp
@@ -443,7 +501,7 @@ list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 
 if(APPLE)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
-elseif(NOT WIN32)
+elseif(NOT WIN32 AND NOT CYGWIN)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
@@ -492,7 +550,12 @@ message(STATUS "Libs for crypto are: (as list) '${LIBS_OPTIONAL_CRYPTO_clean}'")
 
 set(LIB_OPTIONAL_CAPNG "")
 if (UNIX AND NOT CYGWIN AND NOT APPLE)
-	set(LIB_OPTIONAL_CAPNG "cap-ng")
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        message(STATUS "CAP-NG on Linux is ON")
+        set(LIB_OPTIONAL_CAPNG "cap-ng")
+    else()
+        message(STATUS "CAP-NG not supported on '${CMAKE_SYSTEM_NAME}'")
+    endif()
 endif ()
 
 ######################################################################
@@ -502,9 +565,21 @@ endif ()
 ########################### TARGETS ###########################
 add_library(apigalaxy ${SOURCES_API_GALAXY})
 
-add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
-if (NOT MSVC) #TODO
-	cotire(tunserver.elf)
+add_executable(tunserver.elf src/g42-main.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_TUNTAP_DRIVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+
+option(COTIRE "Enable COTIRE" OFF)
+if(COTIRE)
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+		#TODO: ^-- AND NOT MSVC ? | UNIX
+		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/depends/cotire/CMake")
+		include(cotire)
+		cotire(tunserver.elf)
+		message(STATUS "COTIRE enabled on Linux.")
+	else()
+		message(STATUS "COTIRE not available on '${CMAKE_SYSTEM_NAME}'")
+	endif()
+else()
+	message(STATUS "COTIRE disabled.")
 endif()
 
 set(LIBS_COMMON
@@ -526,7 +601,7 @@ target_link_libraries(tunserver.elf
 file(GLOB TEST_SOURCES "src/test/*.cpp")
 list(SORT TEST_SOURCES)
 
-add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
+add_executable(unittests.elf ${SOURCES_GROUP_TUNSERVER} ${SOURCES_TUNTAP_DRIVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC} ${TEST_SOURCES})
 target_compile_definitions(unittests.elf PUBLIC -DUSE_MOCK)
 target_link_libraries(unittests.elf
 	${LIBS_COMMON}
@@ -542,7 +617,7 @@ target_link_libraries(unittests.elf
 
 # This will add libraries, definitions and include directories needed by backward
 # by setting each property on the target.
-add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
+add_executable(performancetests.elf src/test/performance/xint.cpp ${SOURCES_GROUP_TUNSERVER} ${SOURCES_TUNTAP_DRIVER} ${SOURCES_GROUP_TOOLS_NETMODEL} ${SOURCES_GROUP_CRYPTO} ${SOURCES_GROUP_RPC})
 target_link_libraries(performancetests.elf
 	${LIBS_COMMON})
 
@@ -559,7 +634,8 @@ if (TOOLS_ARE_BROKEN)
 	add_definitions(-DTOOLS_ARE_BROKEN=1)
 endif()
 
-message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "Build on system type:          ${CMAKE_SYSTEM_NAME}")
+message(STATUS "C++ Compiler ID:               ${CMAKE_CXX_COMPILER_ID} (Version ${CMAKE_CXX_COMPILER_VERSION})")
 message(STATUS "C Flags:                       ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Flags:                     ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ link flags:                ${CMAKE_CXX_LINK_FLAGS}")

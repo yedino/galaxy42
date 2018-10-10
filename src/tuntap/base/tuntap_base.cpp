@@ -56,6 +56,10 @@ void Wrap_NetPlatform_addAddress(const char *interfaceName,
 	                           << " family " << addrFam
 	                           << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
+	pfp_UNUSED(interfaceName);
+	pfp_UNUSED(address);
+	pfp_UNUSED(prefixLen);
+	pfp_UNUSED(addrFam);
 	pfp_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
@@ -68,6 +72,8 @@ void Wrap_NetPlatform_setMTU(const char *interfaceName, uint32_t mtu) {
 	pfp_goal("MTU value " << mtu << " set on interface " << interfaceName
 		  << " result: " << NetPlatform_syserr_to_string(syserr));
 #else
+	pfp_UNUSED(interfaceName);
+	pfp_UNUSED(mtu);	
 	pfp_throw_error_runtime("You used wrapper, that is not implemented for this OS.");
 #endif
 }
