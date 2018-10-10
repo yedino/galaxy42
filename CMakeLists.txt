@@ -478,7 +478,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DANTINET_freebsd")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DANTINET_freebsd")
 endif()
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows" OR ${CMAKE_SYSTEM_NAME} STREQUAL CYGWIN)
 	file(GLOB SOURCES_TUNTAP_DRIVER
                 src/tuntap/windows/*
                 )
@@ -501,7 +501,7 @@ list(REMOVE_ITEM SOURCES_GROUP_TUNSERVER
 
 if(APPLE)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_darwin.c)
-elseif(NOT WIN32)
+elseif(NOT WIN32 AND NOT CYGWIN)
 	list(APPEND SOURCES_GROUP_TUNSERVER ${CMAKE_CURRENT_SOURCE_DIR}/depends/cjdns-code/NetPlatform_linux.c)
 endif()
 
